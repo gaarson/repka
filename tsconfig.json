@@ -1,0 +1,15 @@
+{
+  "version": "0.0.43",
+  "compilerOptions": {
+      "module": "commonjs",
+      "declaration": true,
+      "outDir": "./"
+  },
+  "files": [
+      "types/callable.d.ts",
+      "types/repository.d.ts",
+      "types/repka.d.ts",
+      "types/watcher.d.ts",
+      "types/create.d.ts"
+  ]
+}
