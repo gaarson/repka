@@ -1,10 +1,9 @@
 import { 
   providerType, 
   watcherObjType, 
-  Source, 
   SPECIAL_KEY, 
   ICallable, 
-  muppetSelectObj 
+  createSource
 } from './callable';
 
 export type baseSourceObjType<T> = {
@@ -51,38 +50,7 @@ export class Watcher<T = { [key: string]: unknown }, M = undefined> implements I
     methods?: M,
   ): void {
     if (typeof initObj === 'object') {
-      this.sourceObj = new Proxy<ICallable<T>>(
-        new Source<T, M>(
-          provider, 
-          Object.keys(initObj).reduce((acc, key) => ({ ...acc, [key]: initObj[key][0] }), {} as T), 
-          methods
-        ),
-        {
-          set(obj, prop, value) {
-            obj[prop] = value;
-            obj.muppet.init[prop] = value;
-
-            for (const key in obj.muppet) {
-              if (
-                (obj.muppet[key] as muppetSelectObj<T>).__notify__ && 
-                (obj.muppet[key] as muppetSelectObj<T>).select.hasOwnProperty(prop)
-              ) {
-                (obj.muppet[key] as muppetSelectObj<T>).select = {
-                  ...(obj.muppet[key] as muppetSelectObj<T>).select,
-                  [prop]: value
-                };
-
-                (obj.muppet[key] as muppetSelectObj<T>).__notify__();
-              }
-            }
-            if (Array.isArray(obj.onUpdate) && prop !== 'onUpdate') {
-              obj.onUpdate.forEach((fn: () => void) => fn());
-              obj.onUpdate = [];
-            }
-            return true;
-          },
-        }
-      );
+      this.sourceObj = createSource<T, M>(initObj, provider, methods);
     }
   }
 
@@ -104,7 +72,7 @@ export class Watcher<T = { [key: string]: unknown }, M = undefined> implements I
     propertyName: string,
   ): Promise<T> {
     return new Promise((resolve) => {
-      this.sourceObj.onUpdate = [...this.sourceObj.onUpdate, () => {
+      this.sourceObj.__onUpdate = [...this.sourceObj.__onUpdate, () => {
         if (this.sourceObj[propertyName]) {
           resolve(this.sourceObj[propertyName]);
         }
@@ -116,8 +84,7 @@ export class Watcher<T = { [key: string]: unknown }, M = undefined> implements I
     neededValue: T
   ): Promise<T> {
     return new Promise((resolve) => {
-      if (this.sourceObj[propertyName] === neededValue) resolve(this.sourceObj[propertyName]);
-      this.sourceObj.onUpdate = [...this.sourceObj.onUpdate, () => {
+      this.sourceObj.__onUpdate = [...this.sourceObj.__onUpdate, () => {
         if (this.sourceObj[propertyName] === neededValue) {
           resolve(this.sourceObj[propertyName]);
         }

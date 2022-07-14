@@ -1,9 +1,21 @@
 {
-  "version": "0.0.43",
   "compilerOptions": {
-      "module": "commonjs",
-      "declaration": true,
-      "outDir": "./"
+    "baseUrl": "src",
+    "outDir": "./",
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ESNext", "dom"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "declaration": true,
+    "downlevelIteration": true,
+    "module": "esNext",
+    "target": "es6",
+    "skipLibCheck": true,
+    "jsx": "preserve"
   },
   "files": [
       "callable.d.ts",
@@ -11,5 +23,10 @@
       "repka.d.ts",
       "watcher.d.ts",
       "create.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }
+
+

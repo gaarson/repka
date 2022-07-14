@@ -9,7 +9,7 @@ export type callType = <
 
 interface IRepositoryService extends Callable {
   actions: IWatcher<unknown, unknown>;
-  _call: callType;
+  __call: callType;
   initializeState<T = { [key: string]: unknown }, M = undefined>(data?: T, methods?: M): void;
   initRepository<T = { [key: string]: unknown }, M = undefined>(
     repo?: T,
@@ -17,7 +17,6 @@ interface IRepositoryService extends Callable {
   ): IWatcher<T, M>;
   convertToObject<RepositoryPort>(): RepositoryPort;
 }
-
 
 export class RepositoryService extends Callable implements RepositoryService {
   constructor(
@@ -34,7 +33,7 @@ export class RepositoryService extends Callable implements RepositoryService {
 
   actions: IWatcher<unknown, unknown>;
 
-  _call<
+  __call<
     RepositoryPort extends { [key: string]: unknown },
     Controller extends { repo?: IRepositoryService },
     AddTypes = undefined
@@ -46,7 +45,6 @@ export class RepositoryService extends Callable implements RepositoryService {
     let broadcast: BroadcastChannel;
     let methods = undefined;
     let repo = null;
-
 
     if (controller) {
       const constructorKeys = controller.constructor.name === 'Object' 
@@ -110,14 +108,16 @@ export class RepositoryService extends Callable implements RepositoryService {
 
     const withOnUpdate: watcherObjType<T> = this.keys.reduce((prev, curr) => {
       let value: unknown;
-      if (this.actions !== undefined && this.actions.get(curr) !== undefined)
+
+      if (this.actions !== undefined && this.actions.get(curr) !== undefined) {
         value = this.actions.get(curr);
-      else
+      } else {
         value = repo[curr];
+      }
 
       return {
         ...prev,
-        [curr]: [value, /*onUpdate ? onUpdate.bind(this) : null*/]
+        [curr]: value,
       };
     }, repo || {} as watcherObjType<T>);
 

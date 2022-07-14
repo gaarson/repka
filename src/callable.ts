@@ -1,20 +1,17 @@
 export const SPECIAL_KEY = '__PROVIDER_ID__';
 
 export type providerType = (...args: any[]) => any;
-export type closureType = ((...args: string[]) => typeof Function) & { _call?: <T>(...args: any) => T };
+export type closureType = ((...args: string[]) => typeof Function) & { __call?: <T>(...args: any) => T };
 
 export type watcherObjType<
-  T = { [key: string]: [unknown, ((prop: string, data: unknown) => void)?] }
+  T = { 
+    [key: string]: unknown 
+  }
 > = T & { 
   init?: watcherObjType<T> | undefined,  
-  onUpdate?: ((...args: unknown[]) => void)[]
+  __onUpdate?: ((...args: unknown[]) => void)[]
 } | ICallable<T>;
-
-
-export type muppetSelectObj<T> = {
-  select: T | { [key: string]: unknown }, __notify__: () => void,
-};
-
+export type muppetSelectObj<T> = T | { [key: string]: unknown };
 export type muppetType<T = { [key: string]: unknown }> = Record<
   'get' | 'init' |  '__PROVIDER_ID__' | string,
   muppetSelectObj<T> | 
@@ -23,47 +20,59 @@ export type muppetType<T = { [key: string]: unknown }> = Record<
   ((obj: muppetType<T>, prop: string) => muppetType<T>[keyof muppetType<T>]) | 
   { [key: string]: unknown } 
 >;
-
 interface Muppet<T> extends muppetType<T> {
   ['__PROVIDER_ID__']?: string;
   init?: watcherObjType<T> | null;
   get?(obj: muppetType<T>, prop: string): muppetType<T>[keyof muppetType<T>];
 };
-
 export interface ICallable<T> extends Function {
   muppet: Muppet<T>;
-  onUpdate: ((...args: unknown[]) => void)[];
-  _call(...args: unknown[]): providerType;
+  __onUpdate: ((...args: unknown[]) => void)[];
+  __listeners: { [key: string]: Map<string, () => void> };
+  __call(...args: unknown[]): providerType;
 }
 
 export class Callable extends Function {
   constructor() {
     super();
     let closure: closureType = undefined;
-    closure = (...args) => { return closure._call(...args); };
+    closure = (...args) => { return closure.__call(...args); };
     return Object.setPrototypeOf(closure, new.target.prototype);
   }
 }
+export class Source<
+  T = { [key: string]: unknown }, 
+  M = undefined
+> extends Callable implements ICallable<T> { 
+  constructor(
+    readonly __call: providerType,
+    initObject: watcherObjType<T>,
+    private readonly __methods: M,
+  ) {
+    super();
+    this.call = undefined;
+    this.muppet.init = initObject;
 
-export class Source<T = { [key: string]: unknown }, M = undefined> extends Callable implements ICallable<T> { 
+    for (const key in initObject) {
+      this[key] = initObject[key];
+    }
+  }
+
+  __onUpdate: [] = [];
+  __listeners: {} = {};
   muppet: Muppet<T> = new Proxy<Muppet<T>>(
     {}, 
     {
-      get(obj: muppetType<T>, prop: string) {
+      get(obj: Muppet<T>, prop: string) {
         if (obj[SPECIAL_KEY] && typeof obj[SPECIAL_KEY] === 'string' && prop !== obj[SPECIAL_KEY]) {
           if (obj[obj[SPECIAL_KEY]]) {
             obj[obj[SPECIAL_KEY]] = {
               ...obj[obj[SPECIAL_KEY]] as muppetSelectObj<T>,
-              select: { 
-                ...((obj[obj[SPECIAL_KEY]] as muppetSelectObj<T>).select || {}), 
-                [prop]: obj.init[prop] || undefined
-              }
+              [prop]: obj.init[prop] || undefined
             };
           } else {
             obj[obj[SPECIAL_KEY]] = {
-              select: {
-                [prop]: obj.init[prop] || undefined
-              }
+              [prop]: obj.init[prop] || undefined
             };
           }
         }
@@ -76,21 +85,41 @@ export class Source<T = { [key: string]: unknown }, M = undefined> extends Calla
       }
     }
   ); 
+}
 
-  constructor(
-    readonly _call: providerType,
-    private readonly initObject: watcherObjType<T>,
-    private readonly methods: M,
-  ) {
-    super();
+export const createSource = <
+  T = { [key: string]: unknown }, 
+  M = undefined
+>(
+  initObj: watcherObjType<T>,
+  provider?: providerType,
+  methods?: M,
+): ICallable<T> => {
+  return new Proxy<ICallable<T>>(
+    new Source<T, M>(provider, initObj, methods),
+    {
+      set(obj, prop: string, value) {
+        obj[prop] = value;
 
-    this.muppet.init = initObject;
+        if (obj.__listeners[prop] && obj.__listeners[prop].size) {
+          for (const [key, notify] of obj.__listeners[prop]) {
+            if (obj.muppet[key]) {
+              obj.muppet[key] = {
+                ...obj.muppet[key] as Muppet<T>,
+                [prop]: value
+              };
+            }
+            
+            notify();
+          }
+        }
 
-    for (const key in initObject) {
-      this[key] = initObject[key];
+        if (Array.isArray(obj.__onUpdate) && prop !== 'onUpdate') {
+          obj.__onUpdate.forEach((fn: () => void) => fn());
+          obj.__onUpdate = [];
+        }
+        return true;
+      },
     }
-  }
-
-
-  onUpdate: [];
+  );
 }
