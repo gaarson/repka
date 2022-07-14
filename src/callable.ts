@@ -44,47 +44,27 @@ export class Source<
   T = { [key: string]: unknown }, 
   M = undefined
 > extends Callable implements ICallable<T> { 
+  __onUpdate: [] = [];
+  __listeners: {} = {};
+  muppet: Muppet<T>;
+
   constructor(
     readonly __call: providerType,
     initObject: watcherObjType<T>,
     private readonly __methods: M,
+    getter: (obj: Muppet<T>, prop: string) => ICallable<T>[keyof ICallable<T>]
   ) {
     super();
     this.call = undefined;
-    this.muppet.init = initObject;
-
     for (const key in initObject) {
       this[key] = initObject[key];
     }
+
+    this.muppet = new Proxy<Muppet<T>>(
+      {}, 
+      { get: getter.bind(this) }
+    ); 
   }
-
-  __onUpdate: [] = [];
-  __listeners: {} = {};
-  muppet: Muppet<T> = new Proxy<Muppet<T>>(
-    {}, 
-    {
-      get(obj: Muppet<T>, prop: string) {
-        if (obj[SPECIAL_KEY] && typeof obj[SPECIAL_KEY] === 'string' && prop !== obj[SPECIAL_KEY]) {
-          if (obj[obj[SPECIAL_KEY]]) {
-            obj[obj[SPECIAL_KEY]] = {
-              ...obj[obj[SPECIAL_KEY]] as muppetSelectObj<T>,
-              [prop]: obj.init[prop] || undefined
-            };
-          } else {
-            obj[obj[SPECIAL_KEY]] = {
-              [prop]: obj.init[prop] || undefined
-            };
-          }
-        }
-
-        if (!obj[prop]) {
-          return obj.init[prop];
-        }
-        
-        return obj[prop];
-      }
-    }
-  ); 
 }
 
 export const createSource = <
@@ -95,8 +75,29 @@ export const createSource = <
   provider?: providerType,
   methods?: M,
 ): ICallable<T> => {
+   function getter(obj: Muppet<T>, prop: string) {
+    if (obj[SPECIAL_KEY] && typeof obj[SPECIAL_KEY] === 'string' && prop !== obj[SPECIAL_KEY]) {
+      if (obj[obj[SPECIAL_KEY]]) {
+        obj[obj[SPECIAL_KEY]] = {
+          ...obj[obj[SPECIAL_KEY]] as muppetSelectObj<T>,
+          [prop]: this[prop] !== undefined ? this[prop] : undefined
+        };
+      } else {
+        obj[obj[SPECIAL_KEY]] = {
+          [prop]: this[prop] !== undefined ? this[prop] : undefined
+        };
+      }
+    }
+
+    if (!obj[prop]) {
+      return this[prop];
+    }
+    
+    return obj[prop];
+  }
+
   return new Proxy<ICallable<T>>(
-    new Source<T, M>(provider, initObj, methods),
+    new Source<T, M>(provider, initObj, methods, getter),
     {
       set(obj, prop: string, value) {
         obj[prop] = value;
