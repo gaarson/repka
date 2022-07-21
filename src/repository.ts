@@ -79,7 +79,7 @@ export class RepositoryService extends Callable implements RepositoryService {
 
       broadcast.onmessage = ({ data }: { data: { type?: string, data: any } | 'needSome' }) => {
         if (data === 'needSome') {
-          broadcast.postMessage({ data: (repo || controller.repo.actions).convertToObject() });
+          broadcast.postMessage({ data: this.convertToObject() });
         } else if (data.type === undefined) {
           this.initRepository<RepositoryPort, Controller>(data.data);
         } else {
