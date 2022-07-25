@@ -10,12 +10,17 @@ export type callType = <
 interface IRepositoryService extends Callable {
   actions: IWatcher<unknown, unknown>;
   __call: callType;
-  initializeState<T = { [key: string]: unknown }, M = undefined>(data?: T, methods?: M): void;
+  initializeState<T = { [key: string]: unknown }, M = undefined>(
+    data?: T, 
+    methods?: M,
+    broadcastName?: string
+  ): void;
+
   initRepository<T = { [key: string]: unknown }, M = undefined>(
     repo?: T,
     controller?: M,
+    broadcastName?: string
   ): IWatcher<T, M>;
-  convertToObject<RepositoryPort>(): RepositoryPort;
 }
 
 export class RepositoryService extends Callable implements RepositoryService {
@@ -42,7 +47,6 @@ export class RepositoryService extends Callable implements RepositoryService {
     controller?: Controller,
     broadcastName?: string
   ): RepositoryPort {
-    let broadcast: BroadcastChannel;
     let methods = undefined;
     let repo = null;
 
@@ -57,52 +61,44 @@ export class RepositoryService extends Callable implements RepositoryService {
           : prev,
         {} as Controller
       );
-    }
-    if (controller) {
+
       if (controller.repo) {
-        controller.repo.initializeState<RepositoryPort>(defaultObject);
-        controller.repo.initializeState<RepositoryPort, Controller>(defaultObject, methods);
+        controller.repo.initializeState<RepositoryPort, Controller>(
+          defaultObject, 
+          methods,
+          broadcastName
+        );
       } else {
         controller.repo = this;
-        controller.repo.initializeState<RepositoryPort>(defaultObject);
-        controller.repo.initializeState<RepositoryPort, Controller>(defaultObject, methods);
+        controller.repo.initializeState<RepositoryPort, Controller>(
+          defaultObject, 
+          methods,
+          broadcastName
+        );
       }
     } else {
       repo = this.initRepository<RepositoryPort, Controller>(
         defaultObject, 
         methods, 
+        broadcastName
       );
     }
 
-    if (broadcastName) {
-      broadcast = new BroadcastChannel(`repository-${broadcastName}`);
-
-      broadcast.onmessage = ({ data }: { data: { type?: string, data: any } | 'needSome' }) => {
-        if (data === 'needSome') {
-          broadcast.postMessage({ data: this.convertToObject() });
-        } else if (data.type === undefined) {
-          this.initRepository<RepositoryPort, Controller>(data.data);
-        } else {
-          (repo || controller.repo.actions).set(data.type, data.data);
-        }
-      };
-
-      broadcast.postMessage('needSome');
-    }
-    
     return (repo || controller.repo.actions).sourceObj;
   }
 
   initializeState<T = { [key: string]: unknown }, M = undefined>(
     data?: T, 
-    methods?: M
+    methods?: M,
+    broadcastName?: string
   ): void {
-    this.actions = this.initRepository<T, M>(data, methods);
+    this.actions = this.initRepository<T, M>(data, methods, broadcastName);
   }
 
   initRepository<T = { [key: string]: unknown }, M = undefined>(
     repo?: T,
     methods?: M,
+    broadcastName?: string
   ): IWatcher<T, M> {
     this.keys = Object.keys(repo || {});
 
@@ -125,16 +121,8 @@ export class RepositoryService extends Callable implements RepositoryService {
       withOnUpdate, 
       this.provider, 
       methods, 
+      broadcastName
     );
-  }
-
-  convertToObject<RepositoryPort>(): RepositoryPort {
-    return this.keys.reduce((prev, curr) => {
-      return {
-        ...prev,
-        [curr]: this.actions.get(curr)
-      };
-    }, {} as RepositoryPort);
   }
 }
 

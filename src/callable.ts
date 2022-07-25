@@ -28,7 +28,7 @@ interface Muppet<T> extends muppetType<T> {
 export interface ICallable<T> extends Function {
   muppet: Muppet<T>;
   __onUpdate: ((...args: unknown[]) => void)[];
-  __listeners: { [key: string]: Map<string, () => void> };
+  __listeners: { [key: string]: Map<string, (key?: string, value?: unknown) => void | BroadcastChannel> };
   __call(...args: unknown[]): providerType;
 }
 
@@ -119,6 +119,7 @@ export const createSource = <
           obj.__onUpdate.forEach((fn: () => void) => fn());
           obj.__onUpdate = [];
         }
+
         return true;
       },
     }
