@@ -56,14 +56,12 @@ export class Source<
   ) {
     super();
     this.call = undefined;
+
     for (const key in initObject) {
       this[key] = initObject[key];
     }
 
-    this.muppet = new Proxy<Muppet<T>>(
-      {}, 
-      { get: getter.bind(this) }
-    ); 
+    this.muppet = new Proxy<Muppet<T>>({}, { get: getter.bind(this) }); 
   }
 }
 
@@ -75,7 +73,7 @@ export const createSource = <
   provider?: providerType,
   methods?: M,
 ): ICallable<T> => {
-   function getter(obj: Muppet<T>, prop: string) {
+  function getter(obj: Muppet<T>, prop: string) {
     if (obj[SPECIAL_KEY] && typeof obj[SPECIAL_KEY] === 'string' && prop !== obj[SPECIAL_KEY]) {
       if (obj[obj[SPECIAL_KEY]]) {
         obj[obj[SPECIAL_KEY]] = {
@@ -89,9 +87,7 @@ export const createSource = <
       }
     }
 
-    if (!obj[prop]) {
-      return this[prop];
-    }
+    if (obj[prop] === undefined) return this[prop];
     
     return obj[prop];
   }
