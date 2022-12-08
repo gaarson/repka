@@ -23,7 +23,10 @@ export function reactProvider<T, M>(): [T, M] {
   const state = useSync(notify => {
     if (this.__criticalFields[key]) {
       this.__criticalFields[key].forEach(prop => {
-        if (this.__listeners[prop]) this.__listeners[prop].set(key, notify);
+        if (
+          this.__listeners[prop] &&
+          typeof this.__listeners[prop] !== 'function'
+        ) this.__listeners[prop].set(key, notify);
       });
     }
 
