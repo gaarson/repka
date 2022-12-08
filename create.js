@@ -1,1 +1,228 @@
-var u=Object.defineProperty,O=Object.defineProperties,v=Object.getOwnPropertyDescriptor,C=Object.getOwnPropertyDescriptors,I=Object.getOwnPropertyNames,b=Object.getOwnPropertySymbols;var k=Object.prototype.hasOwnProperty,M=Object.prototype.propertyIsEnumerable;var _=(s,e,t)=>e in s?u(s,e,{enumerable:!0,configurable:!0,writable:!0,value:t}):s[e]=t,c=(s,e)=>{for(var t in e||(e={}))k.call(e,t)&&_(s,t,e[t]);if(b)for(var t of b(e))M.call(e,t)&&_(s,t,e[t]);return s},y=(s,e)=>O(s,C(e));var x=(s,e)=>{for(var t in e)u(s,t,{get:e[t],enumerable:!0})},P=(s,e,t,n)=>{if(e&&typeof e=="object"||typeof e=="function")for(let r of I(e))!k.call(s,r)&&r!==t&&u(s,r,{get:()=>e[r],enumerable:!(n=v(e,r))||n.enumerable});return s};var R=s=>P(u({},"__esModule",{value:!0}),s);var S={};x(S,{createRepository:()=>j});module.exports=R(S);var p="__PROVIDER_ID__",l=class extends Function{constructor(){super();let e;return e=(...t)=>e.__call(...t),Object.setPrototypeOf(e,new.target.prototype)}},g=class extends l{constructor(t,n,r,i){super();this.__call=t;this.__methods=r;this.__onUpdate=[];this.__listeners={};this.call=void 0;for(let a in n)this[a]=n[a];this.muppet=new Proxy({},{get:i.bind(this)})}},w=(s,e,t)=>{function n(r,i){return r[p]&&typeof r[p]=="string"&&i!==r[p]&&(r[r[p]]?r[r[p]]=y(c({},r[r[p]]),{[i]:this[i]!==void 0?this[i]:void 0}):r[r[p]]={[i]:this[i]!==void 0?this[i]:void 0}),r[i]?r[i]:this[i]}return new Proxy(new g(e,s,t,n),{set(r,i,a){if(r[i]=a,r.__listeners[i]&&r.__listeners[i].size)for(let[o,d]of r.__listeners[i])r.muppet[o]&&(r.muppet[o]=y(c({},r.muppet[o]),{[i]:a})),d();return Array.isArray(r.__onUpdate)&&i!=="onUpdate"&&(r.__onUpdate.forEach(o=>o()),r.__onUpdate=[]),!0}})};var h=class extends l{constructor(t,n){super();this._watcherFactory=t;this._provider=n;this.keys=[];this.provider=n,this.actions=this.initRepository()}__call(t,n,r){let i,a=null;return n?(i=(n.constructor.name==="Object"?Object.keys(n):Object.getOwnPropertyNames(Object.getPrototypeOf(n))).reduce((d,T)=>T!=="constructor"&&typeof n[T]=="function"?y(c({},d),{[T]:n[T].bind(n)}):d,{}),n.repo||(n.repo=this),n.repo.initializeState(t,i,r)):a=this.initRepository(t,i,r),(a||n.repo.actions).sourceObj}initializeState(t,n,r){this.actions=this.initRepository(t,n,r)}initRepository(t,n,r){this.keys=Object.keys(t||{});let i=this.keys.reduce((a,o)=>{let d;return this.actions!==void 0&&this.actions.get(o)!==void 0?d=this.actions.get(o):d=t[o],y(c({},a),{[o]:d})},t||{});return this._watcherFactory(i,this.provider,n,r)}};var f=class{constructor(){this.keys=[];this.SPECIAL_KEY=p}init(e,t={}){typeof e=="object"&&!Array.isArray(e)&&(this.keys=Object.keys(e||{}),this.sourceObj=w(e,t.provider,t.methods)),t.broadcastName&&this.createBroadcast(t.broadcastName)}createBroadcast(e="broadcastWatcher"){this.broadcast=new BroadcastChannel(e),this.broadcast.onmessage=({data:t})=>{if(t==="needSome")this.broadcast.postMessage({data:this.get()});else if(t.type===void 0)for(let n in t.data)this.sourceObj[n]=t.data[n];else this.set(t.type,t.data,!0)},this.broadcast.postMessage("needSome")}set(e,t,n=!1){this.sourceObj&&e!=="name"&&e!=="length"&&(this.sourceObj[e]=t),this.broadcast&&!n&&this.broadcast.postMessage({type:e,data:t})}get(e){if(this.sourceObj&&e)return this.sourceObj[e];if(!e)return this.keys.reduce((t,n)=>y(c({},t),{[n]:this.sourceObj[n]}),{})}watch(e){return new Promise(t=>{this.sourceObj.__onUpdate=[...this.sourceObj.__onUpdate,()=>{this.sourceObj[e]&&t(this.sourceObj[e])}]})}watchFor(e,t){return new Promise(n=>{this.sourceObj.__onUpdate=[...this.sourceObj.__onUpdate,()=>{this.sourceObj[e]===t&&n(this.sourceObj[e])}]})}},m=(s,e,t,n)=>{let r=new f;return r.init(s,{provider:e,methods:t,broadcastName:n}),r};var j=s=>new h(m,s);
+var __defProp = Object.defineProperty;
+var __defProps = Object.defineProperties;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
+var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/create.ts
+var create_exports = {};
+__export(create_exports, {
+  createRepository: () => createRepository
+});
+module.exports = __toCommonJS(create_exports);
+
+// src/callable.ts
+var SPECIAL_KEY = "__PROVIDER_ID__";
+var Callable = class extends Function {
+  constructor() {
+    super();
+    let closure = void 0;
+    closure = (...args) => {
+      return closure.__call(...args);
+    };
+    return Object.setPrototypeOf(closure, new.target.prototype);
+  }
+};
+var Source = class extends Callable {
+  constructor(__call, initObject, __methods, getter) {
+    super();
+    this.__call = __call;
+    this.__methods = __methods;
+    this.__onUpdate = [];
+    this.__listeners = {};
+    this.call = void 0;
+    for (const key in initObject) {
+      this[key] = initObject[key];
+    }
+    this.muppet = new Proxy({}, { get: getter.bind(this) });
+  }
+};
+var createSource = (initObj, provider, methods) => {
+  function getter(obj, prop) {
+    if (obj[SPECIAL_KEY] && typeof obj[SPECIAL_KEY] === "string" && prop !== obj[SPECIAL_KEY]) {
+      if (obj[obj[SPECIAL_KEY]]) {
+        obj[obj[SPECIAL_KEY]] = __spreadProps(__spreadValues({}, obj[obj[SPECIAL_KEY]]), {
+          [prop]: this[prop] !== void 0 ? this[prop] : void 0
+        });
+      } else {
+        obj[obj[SPECIAL_KEY]] = {
+          [prop]: this[prop] !== void 0 ? this[prop] : void 0
+        };
+      }
+    }
+    if (obj[prop] === void 0)
+      return this[prop];
+    return obj[prop];
+  }
+  return new Proxy(new Source(provider, initObj, methods, getter), {
+    set(obj, prop, value) {
+      obj[prop] = value;
+      if (obj.__listeners[prop] && obj.__listeners[prop].size) {
+        for (const [key, notify] of obj.__listeners[prop]) {
+          if (obj.muppet[key]) {
+            obj.muppet[key] = __spreadProps(__spreadValues({}, obj.muppet[key]), {
+              [prop]: value
+            });
+          }
+          notify();
+        }
+      }
+      if (Array.isArray(obj.__onUpdate) && prop !== "onUpdate") {
+        obj.__onUpdate.forEach((fn) => fn());
+        obj.__onUpdate = [];
+      }
+      return true;
+    }
+  });
+};
+
+// src/repository.ts
+var RepositoryService = class extends Callable {
+  constructor(_watcherFactory, _provider) {
+    super();
+    this._watcherFactory = _watcherFactory;
+    this._provider = _provider;
+    this.keys = [];
+    this.provider = _provider;
+    this.actions = this.initRepository();
+  }
+  __call(defaultObject, controller, broadcastName) {
+    let methods = void 0;
+    let repo = null;
+    if (controller) {
+      const constructorKeys = controller.constructor.name === "Object" ? Object.keys(controller) : Object.getOwnPropertyNames(Object.getPrototypeOf(controller));
+      methods = constructorKeys.reduce((prev, curr) => curr !== "constructor" && typeof controller[curr] === "function" ? __spreadProps(__spreadValues({}, prev), { [curr]: controller[curr].bind(controller) }) : prev, {});
+      if (controller.repo) {
+        controller.repo.initializeState(defaultObject, methods, broadcastName);
+      } else {
+        controller.repo = this;
+        controller.repo.initializeState(defaultObject, methods, broadcastName);
+      }
+    } else {
+      repo = this.initRepository(defaultObject, methods, broadcastName);
+    }
+    return (repo || controller.repo.actions).sourceObj;
+  }
+  initializeState(data, methods, broadcastName) {
+    this.actions = this.initRepository(data, methods, broadcastName);
+  }
+  initRepository(repo, methods, broadcastName) {
+    this.keys = Object.keys(repo || {});
+    const withOnUpdate = this.keys.reduce((prev, curr) => {
+      let value;
+      if (this.actions !== void 0 && this.actions.get(curr) !== void 0) {
+        value = this.actions.get(curr);
+      } else {
+        value = repo[curr];
+      }
+      return __spreadProps(__spreadValues({}, prev), {
+        [curr]: value
+      });
+    }, repo || {});
+    return this._watcherFactory(withOnUpdate, this.provider, methods, broadcastName);
+  }
+};
+
+// src/watcher.ts
+var Watcher = class {
+  constructor() {
+    this.keys = [];
+    this.SPECIAL_KEY = SPECIAL_KEY;
+  }
+  init(initObj, options = {}) {
+    if (typeof initObj === "object" && !Array.isArray(initObj)) {
+      this.keys = Object.keys(initObj || {});
+      this.sourceObj = createSource(initObj, options.provider, options.methods);
+    }
+    if (options.broadcastName)
+      this.createBroadcast(options.broadcastName);
+  }
+  createBroadcast(broadcastName = "broadcastWatcher") {
+    this.broadcast = new BroadcastChannel(broadcastName);
+    this.broadcast.onmessage = ({ data }) => {
+      if (data === "needSome") {
+        this.broadcast.postMessage({ data: this.get() });
+      } else if (data.type === void 0) {
+        for (const key in data.data)
+          this.sourceObj[key] = data.data[key];
+      } else {
+        this.set(data.type, data.data, true);
+      }
+    };
+    this.broadcast.postMessage("needSome");
+  }
+  set(propertyName, value, ignoreBroadcast = false) {
+    if (this.sourceObj && propertyName !== "name" && propertyName !== "length") {
+      this.sourceObj[propertyName] = value;
+    }
+    if (this.broadcast && !ignoreBroadcast) {
+      this.broadcast.postMessage({ type: propertyName, data: value });
+    }
+  }
+  get(propertyName) {
+    if (this.sourceObj && propertyName) {
+      return this.sourceObj[propertyName];
+    } else if (!propertyName) {
+      return this.keys.reduce((prev, curr) => {
+        return __spreadProps(__spreadValues({}, prev), {
+          [curr]: this.sourceObj[curr]
+        });
+      }, {});
+    }
+  }
+  watch(propertyName) {
+    return new Promise((resolve) => {
+      this.sourceObj.__onUpdate = [...this.sourceObj.__onUpdate, () => {
+        if (this.sourceObj[propertyName]) {
+          resolve(this.sourceObj[propertyName]);
+        }
+      }];
+    });
+  }
+  watchFor(propertyName, neededValue) {
+    return new Promise((resolve) => {
+      this.sourceObj.__onUpdate = [...this.sourceObj.__onUpdate, () => {
+        if (this.sourceObj[propertyName] === neededValue) {
+          resolve(this.sourceObj[propertyName]);
+        }
+      }];
+    });
+  }
+};
+var watcherCreator = (obj, provider, methods, broadcastName) => {
+  const watcher = new Watcher();
+  watcher.init(obj, { provider, methods, broadcastName });
+  return watcher;
+};
+
+// src/create.ts
+var createRepository = (provider) => new RepositoryService(watcherCreator, provider);

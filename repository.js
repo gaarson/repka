@@ -1,1 +1,100 @@
-var u=Object.defineProperty,f=Object.defineProperties,k=Object.getOwnPropertyDescriptor,w=Object.getOwnPropertyDescriptors,m=Object.getOwnPropertyNames,_=Object.getOwnPropertySymbols;var h=Object.prototype.hasOwnProperty,M=Object.prototype.propertyIsEnumerable;var g=(r,t,e)=>t in r?u(r,t,{enumerable:!0,configurable:!0,writable:!0,value:e}):r[t]=e,d=(r,t)=>{for(var e in t||(t={}))h.call(t,e)&&g(r,e,t[e]);if(_)for(var e of _(t))M.call(t,e)&&g(r,e,t[e]);return r},T=(r,t)=>f(r,w(t));var v=(r,t)=>{for(var e in t)u(r,e,{get:t[e],enumerable:!0})},x=(r,t,e,n)=>{if(t&&typeof t=="object"||typeof t=="function")for(let i of m(t))!h.call(r,i)&&i!==e&&u(r,i,{get:()=>t[i],enumerable:!(n=k(t,i))||n.enumerable});return r};var O=r=>x(u({},"__esModule",{value:!0}),r);var R={};v(R,{RepositoryService:()=>c});module.exports=O(R);var l=class extends Function{constructor(){super();let t;return t=(...e)=>t.__call(...e),Object.setPrototypeOf(t,new.target.prototype)}};var c=class extends l{constructor(e,n){super();this._watcherFactory=e;this._provider=n;this.keys=[];this.provider=n,this.actions=this.initRepository()}__call(e,n,i){let s,a=null;return n?(s=(n.constructor.name==="Object"?Object.keys(n):Object.getOwnPropertyNames(Object.getPrototypeOf(n))).reduce((o,y)=>y!=="constructor"&&typeof n[y]=="function"?T(d({},o),{[y]:n[y].bind(n)}):o,{}),n.repo||(n.repo=this),n.repo.initializeState(e,s,i)):a=this.initRepository(e,s,i),(a||n.repo.actions).sourceObj}initializeState(e,n,i){this.actions=this.initRepository(e,n,i)}initRepository(e,n,i){this.keys=Object.keys(e||{});let s=this.keys.reduce((a,p)=>{let o;return this.actions!==void 0&&this.actions.get(p)!==void 0?o=this.actions.get(p):o=e[p],T(d({},a),{[p]:o})},e||{});return this._watcherFactory(s,this.provider,n,i)}};
+var __defProp = Object.defineProperty;
+var __defProps = Object.defineProperties;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
+var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/repository.ts
+var repository_exports = {};
+__export(repository_exports, {
+  RepositoryService: () => RepositoryService
+});
+module.exports = __toCommonJS(repository_exports);
+
+// src/callable.ts
+var Callable = class extends Function {
+  constructor() {
+    super();
+    let closure = void 0;
+    closure = (...args) => {
+      return closure.__call(...args);
+    };
+    return Object.setPrototypeOf(closure, new.target.prototype);
+  }
+};
+
+// src/repository.ts
+var RepositoryService = class extends Callable {
+  constructor(_watcherFactory, _provider) {
+    super();
+    this._watcherFactory = _watcherFactory;
+    this._provider = _provider;
+    this.keys = [];
+    this.provider = _provider;
+    this.actions = this.initRepository();
+  }
+  __call(defaultObject, controller, broadcastName) {
+    let methods = void 0;
+    let repo = null;
+    if (controller) {
+      const constructorKeys = controller.constructor.name === "Object" ? Object.keys(controller) : Object.getOwnPropertyNames(Object.getPrototypeOf(controller));
+      methods = constructorKeys.reduce((prev, curr) => curr !== "constructor" && typeof controller[curr] === "function" ? __spreadProps(__spreadValues({}, prev), { [curr]: controller[curr].bind(controller) }) : prev, {});
+      if (controller.repo) {
+        controller.repo.initializeState(defaultObject, methods, broadcastName);
+      } else {
+        controller.repo = this;
+        controller.repo.initializeState(defaultObject, methods, broadcastName);
+      }
+    } else {
+      repo = this.initRepository(defaultObject, methods, broadcastName);
+    }
+    return (repo || controller.repo.actions).sourceObj;
+  }
+  initializeState(data, methods, broadcastName) {
+    this.actions = this.initRepository(data, methods, broadcastName);
+  }
+  initRepository(repo, methods, broadcastName) {
+    this.keys = Object.keys(repo || {});
+    const withOnUpdate = this.keys.reduce((prev, curr) => {
+      let value;
+      if (this.actions !== void 0 && this.actions.get(curr) !== void 0) {
+        value = this.actions.get(curr);
+      } else {
+        value = repo[curr];
+      }
+      return __spreadProps(__spreadValues({}, prev), {
+        [curr]: value
+      });
+    }, repo || {});
+    return this._watcherFactory(withOnUpdate, this.provider, methods, broadcastName);
+  }
+};
