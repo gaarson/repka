@@ -17,7 +17,7 @@ if (React.version.split('.')[0] === '18') {
   isNewReact = true;
 }
 
-export function reactProvider<T, M>(): [T, M] {
+export function reactProvider<T, M>(parameter?: keyof T): [T, M] {
   const key = useGetKey();
 
   const state = useSync(notify => {
@@ -66,6 +66,10 @@ export function reactProvider<T, M>(): [T, M] {
       }
     };
   }, []);
+
+  if (parameter !== undefined) {
+    return state[parameter];
+  }
 
   return [state, this.__methods];
 }

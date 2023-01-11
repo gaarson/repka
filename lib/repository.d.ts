@@ -13,7 +13,7 @@ export interface RepositoryService extends IRepositoryService {
         repo?: IRepositoryService;
     }, broadcastName?: string): callAble<RepositoryPort, Controller>;
 }
-interface IRepositoryService extends Callable {
+export interface IRepositoryService extends Callable {
     actions: IWatcher<any, any>;
     __call: callType;
     initializeState<T, M>(data?: T, methods?: M, broadcastName?: string): void;
@@ -22,10 +22,9 @@ interface IRepositoryService extends Callable {
 export declare class RepositoryClass extends Callable implements IRepositoryService {
     private readonly _watcherFactory?;
     private readonly _provider?;
+    actions: IWatcher<any, any>;
     constructor(_watcherFactory?: watcherCreatorType, _provider?: providerType);
     private keys;
-    private provider;
-    actions: IWatcher<any, any>;
     __call<RepositoryPort extends {
         [key: string]: unknown;
     }, Controller extends {
@@ -35,4 +34,3 @@ export declare class RepositoryClass extends Callable implements IRepositoryServ
     initRepository<T, M>(repo?: T, methods?: M, broadcastName?: string): IWatcher<T, M>;
 }
 export declare function repositoryCreator(_watcherFactory?: watcherCreatorType, _provider?: providerType): IRepositoryService;
-export {};

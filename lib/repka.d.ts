@@ -1,1 +1,1 @@
-export declare const repka: import("./repository").RepositoryService;
+export declare const repka: import("./repository").IRepositoryService;

@@ -19,13 +19,13 @@ export interface RepositoryService extends IRepositoryService {
     Controller = undefined,
     AddTypes = undefined
   >(
-      defaultObject?: RepositoryPort,
-      controller?: Controller & { repo?: IRepositoryService; },
-      broadcastName?: string
+    defaultObject?: RepositoryPort,
+    controller?: Controller & { repo?: IRepositoryService; },
+    broadcastName?: string
   ): callAble<RepositoryPort, Controller>;
 }
 
-interface IRepositoryService extends Callable {
+export interface IRepositoryService extends Callable {
   actions: IWatcher<any, any>;
   __call: callType;
   initializeState<T, M>
@@ -35,19 +35,17 @@ interface IRepositoryService extends Callable {
 }
 
 export class RepositoryClass extends Callable implements IRepositoryService {
+  actions: IWatcher<any, any>;
+
   constructor(
     private readonly _watcherFactory?: watcherCreatorType, 
     private readonly _provider?: providerType
   ) {
     super();
-    this.provider = _provider;
     this.actions = this.initRepository();
   }
 
   private keys: string[] = [];
-  private provider: providerType; 
-
-  actions: IWatcher<any, any>;
 
   __call<
     RepositoryPort extends { [key: string]: unknown },
@@ -80,7 +78,11 @@ export class RepositoryClass extends Callable implements IRepositoryService {
           broadcastName
         );
       } else {
-        controller.repo = this;
+        controller.repo = {
+          initializeState: this.initializeState,
+          initRepository: this.initRepository,
+          ...this
+        };
         controller.repo.initializeState<RepositoryPort, Controller>(
           defaultObject, 
           methods,
@@ -130,7 +132,7 @@ export class RepositoryClass extends Callable implements IRepositoryService {
 
     return this._watcherFactory<T, M>(
       withOnUpdate, 
-      this.provider,
+      this._provider,
       methods, 
       broadcastName
     );
