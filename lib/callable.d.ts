@@ -18,8 +18,9 @@ export interface Muppet<T> extends muppetType<T> {
     __init__: watcherObjType<T> | null;
     get?(obj: muppetType<T>, prop: string): muppetType<T>[keyof muppetType<T>];
 }
-export interface ICallable<T, M = undefined> extends Function {
-    (...args: unknown[]): [T, M];
+export interface ICallable<T, M = undefined, A = undefined> extends Function {
+    (): [T, M];
+    (param: string): A;
     muppet: Muppet<T>;
     __onUpdate: ((...args: unknown[]) => void)[];
     __listeners: {

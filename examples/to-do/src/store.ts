@@ -20,7 +20,7 @@ if (React.version.split('.')[0] === '18') {
   isNewReact = true;
 }
 
-export function reactProvider<T, M>(parameter?: keyof T): [T, M] {
+export function reactProvider<T, M>(parameter?: keyof T): React.ReactNode {
   const key = useGetKey();
 
   const state = useSync(notify => {
@@ -77,13 +77,13 @@ export function reactProvider<T, M>(parameter?: keyof T): [T, M] {
   return [state, this.__methods];
 }
 
-export const repka = createRepository(reactProvider);
+const repka = createRepository(reactProvider);
 
 export type taskType = callAble<{
   id: string,
   title: string,
   description: string
-}>;
+}, undefined, React.ReactNode>;
 
 export const tasksRepo = repka<{
   tasks: taskType[],
@@ -100,7 +100,7 @@ export const addTask = (event: any) => {
   const data = new FormData(event.target);
 
   tasksRepo.tasks = [
-    repka({ 
+    repka({
       title: `${data.get('title')}`,
       description: `${data.get('description')}`, 
       id: uuidv4() 

@@ -1,6 +1,3 @@
-import { repositoryCreator, IRepositoryService } from './repository';
-import { watcherCreator } from './watcher';
+import { repositoryCreator } from './repository';
 
-export function createRepository(provider): IRepositoryService {
-  return repositoryCreator(watcherCreator, provider);
-}
+export const createRepository = (provider) => repositoryCreator(provider);

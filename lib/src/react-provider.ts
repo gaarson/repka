@@ -17,7 +17,7 @@ if (React.version.split('.')[0] === '18') {
   isNewReact = true;
 }
 
-export function reactProvider<T, M>(parameter?: keyof T): [T, M] | T[keyof T] {
+export function reactProvider<T, M>(parameter?: keyof T): [T, M] | React.ReactNode {
   const key = useGetKey();
 
   const state = useSync(notify => {

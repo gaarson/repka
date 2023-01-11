@@ -1,7 +1,8 @@
 import { watcherObjType, ICallable, Callable, providerType } from './callable';
-import { IWatcher, watcherCreatorType } from './watcher';
+import { IWatcher, watcherCreatorType, watcherCreator } from './watcher';
+import { reactProvider } from './react-provider';
 
-export type callAble<T, M = undefined> = T & ICallable<T, M>;
+export type callAble<T, M = undefined, A = undefined> = T & ICallable<T, M, A>;
 
 export declare type callType = <RepositoryPort extends {
     [key: string]: unknown;
@@ -11,7 +12,7 @@ export declare type callType = <RepositoryPort extends {
   defaultObject?: RepositoryPort, 
   controller?: Controller, 
   broadcastName?: string
-) => callAble<RepositoryPort, Controller>;
+) => callAble<RepositoryPort, Controller, AddTypes>;
 
 export interface RepositoryService extends IRepositoryService {
   <
@@ -22,10 +23,10 @@ export interface RepositoryService extends IRepositoryService {
     defaultObject?: RepositoryPort,
     controller?: Controller & { repo?: IRepositoryService; },
     broadcastName?: string
-  ): callAble<RepositoryPort, Controller>;
+  ): callAble<RepositoryPort, Controller, AddTypes>;
 }
 
-export interface IRepositoryService extends Callable {
+interface IRepositoryService extends Callable {
   actions: IWatcher<any, any>;
   __call: callType;
   initializeState<T, M>
@@ -55,7 +56,7 @@ export class RepositoryClass extends Callable implements IRepositoryService {
     defaultObject?: RepositoryPort,
     controller?: Controller,
     broadcastName?: string
-  ): callAble<RepositoryPort, Controller> {
+  ): callAble<RepositoryPort, Controller, AddTypes> {
     let methods = undefined;
     let repo = null;
 
@@ -139,9 +140,6 @@ export class RepositoryClass extends Callable implements IRepositoryService {
   }
 }
 
-export function repositoryCreator(
-  _watcherFactory?: watcherCreatorType, 
-  _provider?: providerType
-): IRepositoryService {
-  return new RepositoryClass(_watcherFactory, _provider);
+export const repositoryCreator = (provider?: providerType): IRepositoryService => {
+  return new RepositoryClass(watcherCreator, provider || reactProvider);
 }

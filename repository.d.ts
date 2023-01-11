@@ -1,19 +1,19 @@
 import { ICallable, Callable, providerType } from './callable';
 import { IWatcher, watcherCreatorType } from './watcher';
-export type callAble<T, M = undefined> = T & ICallable<T, M>;
+export type callAble<T, M = undefined, A = undefined> = T & ICallable<T, M, A>;
 export declare type callType = <RepositoryPort extends {
     [key: string]: unknown;
 }, Controller extends {
     repo?: IRepositoryService;
-}, AddTypes = undefined>(defaultObject?: RepositoryPort, controller?: Controller, broadcastName?: string) => callAble<RepositoryPort, Controller>;
+}, AddTypes = undefined>(defaultObject?: RepositoryPort, controller?: Controller, broadcastName?: string) => callAble<RepositoryPort, Controller, AddTypes>;
 export interface RepositoryService extends IRepositoryService {
     <RepositoryPort extends {
         [key: string]: unknown;
     } = undefined, Controller = undefined, AddTypes = undefined>(defaultObject?: RepositoryPort, controller?: Controller & {
         repo?: IRepositoryService;
-    }, broadcastName?: string): callAble<RepositoryPort, Controller>;
+    }, broadcastName?: string): callAble<RepositoryPort, Controller, AddTypes>;
 }
-export interface IRepositoryService extends Callable {
+interface IRepositoryService extends Callable {
     actions: IWatcher<any, any>;
     __call: callType;
     initializeState<T, M>(data?: T, methods?: M, broadcastName?: string): void;
@@ -29,8 +29,9 @@ export declare class RepositoryClass extends Callable implements IRepositoryServ
         [key: string]: unknown;
     }, Controller extends {
         repo?: IRepositoryService;
-    }, AddTypes = undefined>(defaultObject?: RepositoryPort, controller?: Controller, broadcastName?: string): callAble<RepositoryPort, Controller>;
+    }, AddTypes = undefined>(defaultObject?: RepositoryPort, controller?: Controller, broadcastName?: string): callAble<RepositoryPort, Controller, AddTypes>;
     initializeState<T, M>(data?: T, methods?: M, broadcastName?: string): void;
     initRepository<T, M>(repo?: T, methods?: M, broadcastName?: string): IWatcher<T, M>;
 }
-export declare function repositoryCreator(_watcherFactory?: watcherCreatorType, _provider?: providerType): IRepositoryService;
+export declare const repositoryCreator: (provider?: providerType) => IRepositoryService;
+export {};

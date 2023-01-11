@@ -28,8 +28,9 @@ export interface Muppet<T> extends muppetType<T> {
   get?(obj: muppetType<T>, prop: string): muppetType<T>[keyof muppetType<T>];
 };
 
-export interface ICallable<T, M = undefined> extends Function {
-  (...args: unknown[]): [T, M];
+export interface ICallable<T, M = undefined, A = undefined> extends Function {
+  (): [T, M];
+  (param: string): A;
   muppet: Muppet<T>;
   __onUpdate: ((...args: unknown[]) => void)[];
   __listeners: { [key: string]: Map<string, (key?: string, value?: unknown) => void | BroadcastChannel> };
@@ -101,12 +102,8 @@ export const createSource = <
       ];
     }
 
-    if (prop === '__init__') {
-      return obj.__init__;
-    }
-    if (obj[prop] === undefined) {
-      return obj.__init__[prop];
-    } 
+    if (prop === '__init__') { return obj.__init__; }
+    if (obj[prop] === undefined) { return obj.__init__[prop]; } 
 
     return obj[prop];
   }
