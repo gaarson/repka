@@ -34,7 +34,12 @@ export function reactProvider<T, M>(parameter?: keyof T): [T, M] | React.ReactNo
       if (this.__criticalFields[key]) {
         this.muppet[key] = false;
         this.__criticalFields[key].forEach(prop => {
-          if (this.__listeners[prop]) this.__listeners[prop].delete(key);
+          if (
+            this.__listeners[prop] &&
+            typeof this.__listeners[prop] !== 'function'
+          ) {
+            this.__listeners[prop].delete(key);
+          }
         });
       }
     } : () => undefined;
@@ -73,4 +78,3 @@ export function reactProvider<T, M>(parameter?: keyof T): [T, M] | React.ReactNo
 
   return [state, this.__methods];
 }
-
