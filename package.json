@@ -11,13 +11,5 @@
   "peerDependencies": {
     "react": "^16.8.5 || ^17.0.0 || ^17.0.1 || ^18.0.0 || ^18.1.0 || ^18.2.0"
   },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^18.11.9",
-    "@types/use-sync-external-store": "^0.0.3",
-    "esbuild": "^0.14.49",
-    "esbuild-node-externals": "^1.4.1",
-    "use-sync-external-store": "^1.2.0"
-  }
+  "author": "rusel"
 }
