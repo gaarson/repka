@@ -1,24 +1,17 @@
 import React from 'react';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
-let useSync = useSyncExternalStore;
-let isNewReact = false;
-
-const useGetKey = () => {
-  let keyRef = React.useRef(parseInt(String((Math.random() * 10000000)), 10).toString());
-  if (React.version.split('.')[0] === '18') {
-    return React.useId();
-  }
-  return keyRef.current;
-}
-
-if (React.version.split('.')[0] === '18') {
-  useSync = React.useSyncExternalStore;
-  isNewReact = true;
-}
-
 export function reactProvider<T, M>(parameter?: keyof T): [T, M] | React.ReactNode {
-  const key = useGetKey();
+  let useSync = useSyncExternalStore;
+  let isNewReact = false;
+  let key = React.useId 
+    ? React.useId()
+    : React.useRef(parseInt(String((Math.random() * 10000000)), 10).toString()).current
+
+  if (React.useId) {
+    useSync = React.useSyncExternalStore;
+    isNewReact = true;
+  }
 
   const state = useSync(notify => {
     if (this.__criticalFields[key]) {
@@ -60,7 +53,10 @@ export function reactProvider<T, M>(parameter?: keyof T): [T, M] | React.ReactNo
       if (this.muppet[key] && this.__criticalFields[key]) {
         if (!isNewReact) {
           this.__criticalFields[key.current].forEach(prop => {
-            if (this.__listeners[prop]) {
+            if (
+              this.__listeners[prop] &&
+              typeof this.__listeners[prop] !== 'function'
+            ) {
               this.__listeners[prop].delete(key.current);
             }
           });
