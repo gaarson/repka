@@ -5,7 +5,7 @@ export type closureType = ((...args: string[]) => typeof Function) & { __call?: 
 
 export type watcherObjType<T> = (T & {
     init?: watcherObjType<T> | undefined;
-    __onUpdate?: ((...args: unknown[]) => void)[];
+    __onUpdate?: (((...args: unknown[]) => void) | null)[];
 });
 
 export type muppetSelectObj<T> = T | { [key: string]: unknown };
@@ -32,7 +32,7 @@ export interface ICallable<T, M = undefined, A = undefined> extends Function {
   (): [T, M];
   (param: string): A;
   muppet: Muppet<T>;
-  __onUpdate: ((...args: unknown[]) => void)[];
+  __onUpdate: (((...args: unknown[]) => void) | null)[];
   __listeners: { [key: string]: Map<string, (key?: string, value?: unknown) => void | BroadcastChannel> };
   __call: providerType<T, M>;
 }
@@ -48,7 +48,7 @@ export class Callable extends Function {
 
 export interface ISource<T, M = undefined> {
   muppet: Muppet<T>;
-  __onUpdate: ((...args: unknown[]) => void)[];
+  __onUpdate: (((...args: unknown[]) => void) | null)[];
   __listeners: { [key: string]: Map<string, (key?: string, value?: unknown) => void | BroadcastChannel> };
   __call: providerType<T, M>;
 }
@@ -126,8 +126,7 @@ export const createSource = <
     }
 
     if (Array.isArray(obj.__onUpdate) && prop !== '__onUpdate') {
-      obj.__onUpdate.forEach((fn: () => void) => fn());
-      obj.__onUpdate = [];
+      obj.__onUpdate.forEach((fn: (...args: unknown[]) => void) => fn && fn(prop));
     }
 
     return true;
