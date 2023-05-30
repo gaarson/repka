@@ -26,7 +26,7 @@ export interface RepositoryService extends IRepositoryService {
   ): callAble<RepositoryPort, Controller, AddTypes>;
 }
 
-interface IRepositoryService extends Callable {
+export interface IRepositoryService extends Callable {
   actions: IWatcher<any, any>;
   __call: callType;
   initializeState<T, M>
@@ -72,24 +72,16 @@ export class RepositoryClass extends Callable implements IRepositoryService {
         {} as Controller
       );
 
-      if (controller.repo) {
-        controller.repo.initializeState<RepositoryPort, Controller>(
-          defaultObject, 
-          methods,
-          broadcastName
-        );
-      } else {
-        controller.repo = {
-          initializeState: this.initializeState,
-          initRepository: this.initRepository,
-          ...this
-        };
-        controller.repo.initializeState<RepositoryPort, Controller>(
-          defaultObject, 
-          methods,
-          broadcastName
-        );
-      }
+      controller.repo = {
+        initializeState: this.initializeState,
+        initRepository: this.initRepository,
+        ...this
+      };
+      controller.repo.initializeState<RepositoryPort, Controller>(
+        controller.repo ? { ...this.actions.get(), ...defaultObject } : defaultObject,
+        methods,
+        broadcastName
+      );
     } else {
       repo = this.initRepository<RepositoryPort, Controller>(
         defaultObject, 

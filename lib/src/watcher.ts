@@ -134,10 +134,16 @@ export class Watcher<T = {[key: string]: unknown}, M = undefined> implements IWa
   public watch(
     propertyName: string,
   ): Promise<T> {
+    const index = this.sourceObj.__onUpdate.length;
+
     return new Promise((resolve) => {
-      this.sourceObj.__onUpdate = [...this.sourceObj.__onUpdate, () => {
-        if (this.sourceObj[propertyName]) {
+      this.sourceObj.__onUpdate = [...this.sourceObj.__onUpdate, (updatedProperty) => {
+        if (propertyName === updatedProperty) {
           resolve(this.sourceObj[propertyName]);
+          this.sourceObj.__onUpdate[index] = null;
+
+          if (this.sourceObj.__onUpdate.every((i) => i ===  null))
+            this.sourceObj.__onUpdate = [];
         }
       }];
     });
@@ -146,10 +152,16 @@ export class Watcher<T = {[key: string]: unknown}, M = undefined> implements IWa
     propertyName: string,
     neededValue: T
   ): Promise<T> {
+    const index = this.sourceObj.__onUpdate.length;
     return new Promise((resolve) => {
-      this.sourceObj.__onUpdate = [...this.sourceObj.__onUpdate, () => {
-        if (this.sourceObj[propertyName] === neededValue) {
+      this.sourceObj.__onUpdate = [...this.sourceObj.__onUpdate, (updatedProperty) => {
+        if (propertyName === updatedProperty 
+          && this.sourceObj[propertyName] === neededValue) {
           resolve(this.sourceObj[propertyName]);
+          this.sourceObj.__onUpdate[index] = null;
+
+          if (this.sourceObj.__onUpdate.every((i) => i ===  null)) 
+            this.sourceObj.__onUpdate = [];
         }
       }];
     });
