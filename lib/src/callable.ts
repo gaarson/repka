@@ -110,10 +110,12 @@ export const createSource = <
 
   function setter(obj, prop: string, value) {
     obj[prop] = value;
-    obj.muppet.__init__ = { 
-      ...obj.muppet.__init__,
-      [prop]: value
-    };
+    if (prop !== '__onUpdate') {
+      obj.muppet.__init__ = { 
+        ...obj.muppet.__init__,
+        [prop]: value
+      };
+    }
 
     if (obj.__listeners[prop] && obj.__listeners[prop].size) {
       obj.__listeners[prop].forEach((notify, key) => {
