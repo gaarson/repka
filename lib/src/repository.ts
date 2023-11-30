@@ -75,10 +75,11 @@ export class RepositoryClass extends Callable implements IRepositoryService {
       controller.repo = {
         initializeState: this.initializeState,
         initRepository: this.initRepository,
-        ...this
+        ...this,
+        ...(controller.repo ? controller.repo : {})
       };
       controller.repo.initializeState<RepositoryPort, Controller>(
-        controller.repo ? { ...this.actions.get(), ...defaultObject } : defaultObject,
+        controller.repo ? { ...controller.repo.actions.get(), ...defaultObject } : defaultObject,
         methods,
         broadcastName
       );
@@ -98,7 +99,10 @@ export class RepositoryClass extends Callable implements IRepositoryService {
     methods?: M,
     broadcastName?: string
   ): void {
-    this.actions = this.initRepository<T, M>(data, methods, broadcastName);
+    const newActions = this.initRepository<T, M>(data, methods, broadcastName);
+    newActions.sourceObj.__onUpdate = [...this.actions.sourceObj.__onUpdate];
+    
+    this.actions = newActions;
   }
 
   initRepository<T, M>(

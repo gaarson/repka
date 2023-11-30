@@ -16,5 +16,8 @@
     "esbuild": "^0.14.49",
     "esbuild-node-externals": "^1.4.1",
     "use-sync-external-store": "^1.2.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0"
   }
 }
