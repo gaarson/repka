@@ -117,7 +117,7 @@ export class Watcher<T = {[key: string]: unknown}, M = undefined> implements IWa
     propertyName?: keyof (T)
   ): (T)[keyof T] | T {
     if (this.sourceObj && propertyName) {
-      return this.sourceObj[`${FIELDS_PREFIX}data`][propertyName];
+      return this.sourceObj[propertyName];
     } else if (!propertyName) {
       return this.sourceObj[`${FIELDS_PREFIX}data`];
     }

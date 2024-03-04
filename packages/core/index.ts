@@ -1,6 +1,18 @@
 export type providerType<DataType = undefined, MethodsObjType = undefined> = () => 
   (MethodsObjType extends object ? [DataType, MethodsObjType] : DataType);
 
+export class Callable extends Function {
+  __call: Function
+  constructor() {
+    super();
+    let closure = undefined;
+    closure = (...args) => { 
+      return closure.__call(...args); 
+    };
+    return Object.setPrototypeOf(closure, new.target.prototype);
+  }
+}
+
 export const SPECIAL_KEY = '__PROVIDER_ID__';
 export const FIELDS_PREFIX = '__REPO__'
 
@@ -24,7 +36,15 @@ const get = (obj, prop) => {
 }
 
 const set = (obj, prop, value): boolean => {
-  if (prop.startsWith(FIELDS_PREFIX) || prop === '__call') return true;
+  if (prop.startsWith(FIELDS_PREFIX) || prop === '__call') {
+    obj[prop] = value;
+    return true;
+  } 
+
+  obj[`${FIELDS_PREFIX}data`] = {
+    ...obj[`${FIELDS_PREFIX}data`],
+    [prop]: value
+  };
 
   if (obj[`${FIELDS_PREFIX}listeners`][prop] && obj[`${FIELDS_PREFIX}listeners`][prop].size) {
     obj[`${FIELDS_PREFIX}listeners`][prop].forEach((notify, key) => {
@@ -36,25 +56,11 @@ const set = (obj, prop, value): boolean => {
       notify();
     });
   }
-
-  obj[`${FIELDS_PREFIX}data`] = {
-    ...obj[`${FIELDS_PREFIX}data`],
-    [prop]: value
-  };
+  if (obj[`${FIELDS_PREFIX}onUpdate`].length) {
+    obj[`${FIELDS_PREFIX}onUpdate`].forEach((fn: (...args: unknown[]) => void) => fn && fn(prop));
+  }
 
   return true;
-}
-
-class Callable extends Function {
-  __call: Function
-  constructor() {
-    super();
-    let closure = undefined;
-    closure = (...args) => { 
-      return closure.__call(...args); 
-    };
-    return Object.setPrototypeOf(closure, new.target.prototype);
-  }
 }
 
 export const createSource = <
@@ -70,6 +76,9 @@ export const createSource = <
       return methods ? [this, methods] : this;
     };
     const callableObj = new Callable();
+
+    if (methods) callableObj[`${FIELDS_PREFIX}methods`] = methods;
+
     callableObj[`${FIELDS_PREFIX}onUpdate`] = [];
     callableObj[`${FIELDS_PREFIX}data`] = data;
     callableObj[`${FIELDS_PREFIX}criticalFields`] = {};
@@ -77,11 +86,8 @@ export const createSource = <
     callableObj[`${FIELDS_PREFIX}listeners`] = Object.keys(data).reduce(
       (prev, key) => ({ ...prev, [key]: new Map() }), {}
     );
-    if (methods) {
-      callableObj[`${FIELDS_PREFIX}methods`] = methods;
-    }
-    const proxy = new Proxy(callableObj, { set, get });
 
+    const proxy = new Proxy(callableObj, { set, get });
     callableObj.__call = (provider || defaultProvider).bind(proxy);
 
     return proxy;

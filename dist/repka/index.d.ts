@@ -1,3 +1,2 @@
-import { repositoryCreator } from './repository';
-export { callAble, IRepositoryService } from './repository';
-export declare const repka: typeof repositoryCreator;
+export { RepkaService as repka } from './repository';
+export { IRepositoryService } from './repository';

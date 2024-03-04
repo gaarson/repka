@@ -1,4 +1,3 @@
-import { repositoryCreator } from './repository';
+export { RepkaService as repka } from './repository';
+export { IRepositoryService } from './repository';
 
-export { callAble, IRepositoryService } from './repository';
-export const repka = repositoryCreator;
