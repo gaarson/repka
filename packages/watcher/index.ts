@@ -20,9 +20,11 @@ export type proxyHandlerType<T> = {
 
 export interface IWatcher<
   T = { [key: string]: unknown },
-  M = undefined
+  M = undefined,
+  P = undefined
 > {
   sourceObj: T & providerType<T, M>;
+  savedProvider: P;
   SPECIAL_KEY: specialKeyLiteralType;
   broadcast: any;
 
@@ -56,9 +58,9 @@ export type watcherCreatorType = <T, M>(
   broadcastName?: string
 ) => Watcher<T, M>;
 
-export class Watcher<T = {[key: string]: unknown}, M = undefined> implements IWatcher<T, M> {
-  private keys: string[] = [];
+export class Watcher<T = {[key: string]: unknown}, M = undefined,  P = undefined> implements IWatcher<T, M, P> {
 
+  savedProvider: P;
   sourceObj: T & providerType<T, M>;
   SPECIAL_KEY: specialKeyLiteralType = SPECIAL_KEY;
   broadcast: any;
@@ -66,14 +68,18 @@ export class Watcher<T = {[key: string]: unknown}, M = undefined> implements IWa
   init(
     initObj: T,
     options: {
-      provider?: providerType,
+      provider?: any,
       methods?: M,
       broadcastName?: string
     } = {}
   ): void {
     if (typeof initObj === 'object' && !Array.isArray(initObj)) {
-      this.keys = Object.keys(initObj || {});
-      this.sourceObj = createSource<T, M>(initObj, options.provider, options.methods) as T & providerType<T, M>;
+      if (options.provider) this.savedProvider = options.provider;
+      this.sourceObj = createSource<T, M>(
+        initObj, 
+        options.methods, 
+        options.provider || this.savedProvider
+      ) as T & providerType<T, M>;
     }
     if (options.broadcastName) this.createBroadcast(options.broadcastName);
   }

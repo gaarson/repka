@@ -1,1 +1,1 @@
-import{a}from"../chunks/WTH55TLL.chunk.js";import"../chunks/LRXP24MS.chunk.js";export{a as reactProvider};
+import{a}from"../chunks/EC5LDXWV.chunk.js";import"../chunks/M6QMYXSV.chunk.js";export{a as reactProvider};

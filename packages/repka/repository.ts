@@ -1,6 +1,4 @@
-import { FIELDS_PREFIX } from 'core';
 import { IWatcher, watcherCreator } from 'watcher';
-import { reactProvider } from 'react-provider';
 
 export interface IRepositoryService {
   <
@@ -13,8 +11,14 @@ export interface IRepositoryService {
 
   keys: string[];
   actions: IWatcher<any, any>;
-  initializeState<T, M> (data?: T, methods?: M, prevActions?: any): void;
-  initRepository<T, M> (repo?: T, controller?: M, prevActions?: any): IWatcher<T, M>;
+  initializeState<T, M> (
+    data?: T,  
+    options?: { methods?: M, prevActions?: any, provider?: any }
+  ): void;
+  initRepository?<T, M> (repo?: T, options?: {
+    methods?: M, provider?: any, prevActions?: any
+  }): IWatcher<T, M>;
+
   __call: <
     RepositoryPort extends { [key: string]: unknown },
     Controller = undefined,
@@ -27,8 +31,14 @@ export interface IRepositoryService {
 export class RepositoryService extends Function {
   keys: string[];
   actions: IWatcher<any, any>;
-  initializeState?<T, M> (data?: T, methods?: M, broadcastName?: string): void;
-  initRepository?<T, M> (repo?: T, controller?: M, broadcastName?: string): IWatcher<T, M>;
+  initializeState<T, M>(
+    data?: T,  
+    options?: { methods?: M, prevActions?: any, provider?: any }
+  ): void {};
+  initRepository?<T, M> (repo?: T, options?: {
+    methods?: M, provider?: any, prevActions?: any
+  }): IWatcher<T, M>;
+
   __call: <
     RepositoryPort extends { [key: string]: unknown },
     Controller = undefined,
@@ -48,31 +58,48 @@ export class RepositoryService extends Function {
 }
 
 interface initRepoBoundFunction {
-    <T, M>(rp?: T, m?: M, prevActions?: any): IWatcher<T, M>;
+    <T, M>(rp?: T, options?: {
+      methods?: M,
+      provider?: any,
+      prevActions?: any
+    }): IWatcher<T, M>;
     call<T, M>(this: Function, ...argArray: any[]): IWatcher<T, M>;
 }
-const initRepository: initRepoBoundFunction = function <T, M>(rp?: T, m?: M, prevActions?: any): IWatcher<T, M> {
-  const keys = Object.keys(rp || {});
+export const initRepository: initRepoBoundFunction = function <T, M>(
+  repo: T,
+  options: {
+    methods?: M,
+    provider?: any,
+    prevActions?: any
+  } = {}
+): IWatcher<T, M> {
+  const keys = Object.keys(repo || {});
 
   const withOnUpdate: T = keys.reduce((
     prev: T, 
     curr: string
   ) => {
     let value: unknown;
-    if (prevActions !== undefined && prevActions.get(curr) !== undefined) {
-      value = prevActions.get(curr);
-    } else if (rp) {
-      value = rp[curr];
+    if (options.prevActions !== undefined && options.prevActions.get(curr) !== undefined) {
+      value = options.prevActions.get(curr);
+    } else if (repo) {
+      value = repo[curr];
     }
-
     return { ...prev, [curr]: value };
-  }, rp || {} as T);
+  }, repo || {} as T);
 
-  return watcherCreator<T, M>(withOnUpdate, reactProvider, m);
+  return watcherCreator<T, M>(
+    withOnUpdate, 
+    options.provider, 
+    options.methods
+  );
 }
 
-const initializeState = function<T, M>(data?: T, methods?: M, prevActions?: any): void {
-  const newActions = initRepository.call<T, M>(this, data, methods, prevActions);
+export const initializeState = function<T, M>(
+  data?: T, 
+  options?: { methods?: M, prevActions?: any, provider?: any }
+): void {
+  const newActions = initRepository.call<T, M>(this, data, options);
   this.actions = newActions;
 }
 
@@ -82,7 +109,10 @@ export function repositoryCreator<
 >(
   defaultObject?: RepositoryPort,
   controller?: Controller & { repo?: IRepositoryService },
-  broadcastName?: string
+  { provider }: {
+    provider?: any,
+    broadcastName?: string
+  } = {}
 ): (() => [RepositoryPort, Omit<Controller, 'repo'>]) & RepositoryPort {
   let methods: Controller;
   let repo = null;
@@ -105,22 +135,15 @@ export function repositoryCreator<
     controller.repo.initializeState = initializeState;
     controller.repo.initializeState<RepositoryPort, Controller>(
       prevActions ? { ...prevActions.get(), ...defaultObject } : defaultObject,
-      methods,
-      prevActions
+      { methods, prevActions, provider: provider || prevActions?.savedProvider || this?.actions?.savedProvider }
     );
   } else {
-    repo = initRepository<RepositoryPort, Controller>(defaultObject);
+    repo = initRepository<RepositoryPort, Controller>(
+      defaultObject, 
+      { provider: provider || this?.actions?.savedProvider, methods }
+    );
   }
 
   return (repo || controller?.repo?.actions || {}).sourceObj;
 }
-
-const RepkaService: IRepositoryService = new RepositoryService() as IRepositoryService;
-
-RepkaService.initRepository = initRepository;
-RepkaService.initializeState = initializeState;
-RepkaService.actions = initRepository({});
-RepkaService.__call = repositoryCreator;
-
-export { RepkaService };
 

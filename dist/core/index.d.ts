@@ -5,4 +5,7 @@ export declare class Callable extends Function {
 }
 export declare const SPECIAL_KEY = "__PROVIDER_ID__";
 export declare const FIELDS_PREFIX = "__REPO__";
-export declare const createSource: <DataType = unknown, MethodsObjType = undefined>(data: DataType, provider?: providerType<DataType, MethodsObjType>, methods?: MethodsObjType) => DataType;
+export interface ISource<T> {
+    <DataType = T, MethodsObjType = undefined>(data: DataType, methods?: MethodsObjType, provider?: providerType<DataType, MethodsObjType>): (() => [DataType, Omit<MethodsObjType, 'repo'>]) & DataType;
+}
+export declare const createSource: <DataType = unknown, MethodsObjType = undefined>(data: DataType, methods?: MethodsObjType, provider?: providerType<DataType, MethodsObjType>) => ISource<DataType>;

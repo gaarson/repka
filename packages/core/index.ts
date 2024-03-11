@@ -63,14 +63,25 @@ const set = (obj, prop, value): boolean => {
   return true;
 }
 
+export interface ISource<T> {
+  <
+    DataType = T,
+    MethodsObjType = undefined
+  >(
+    data: DataType,
+    methods?: MethodsObjType,
+    provider?: providerType<DataType, MethodsObjType>,
+  ): (() => [DataType, Omit<MethodsObjType, 'repo'>]) & DataType;
+}
+
 export const createSource = <
   DataType = unknown,
   MethodsObjType = undefined
 >(
   data: DataType,
-  provider?: providerType<DataType, MethodsObjType>,
   methods?: MethodsObjType,
-): DataType => {
+  provider?: providerType<DataType, MethodsObjType>,
+): ISource<DataType> => {
   try {
     function defaultProvider() {
       return methods ? [this, methods] : this;

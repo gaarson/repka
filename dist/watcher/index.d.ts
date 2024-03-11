@@ -13,8 +13,9 @@ export type proxyHandlerType<T> = {
 };
 export interface IWatcher<T = {
     [key: string]: unknown;
-}, M = undefined> {
+}, M = undefined, P = undefined> {
     sourceObj: T & providerType<T, M>;
+    savedProvider: P;
     SPECIAL_KEY: specialKeyLiteralType;
     broadcast: any;
     init(initObj: T, options: {
@@ -31,13 +32,13 @@ export interface IWatcher<T = {
 export type watcherCreatorType = <T, M>(obj: T, provider?: providerType, methods?: M, broadcastName?: string) => Watcher<T, M>;
 export declare class Watcher<T = {
     [key: string]: unknown;
-}, M = undefined> implements IWatcher<T, M> {
-    private keys;
+}, M = undefined, P = undefined> implements IWatcher<T, M, P> {
+    savedProvider: P;
     sourceObj: T & providerType<T, M>;
     SPECIAL_KEY: specialKeyLiteralType;
     broadcast: any;
     init(initObj: T, options?: {
-        provider?: providerType;
+        provider?: any;
         methods?: M;
         broadcastName?: string;
     }): void;
@@ -47,4 +48,4 @@ export declare class Watcher<T = {
     watch(propertyName: string): Promise<T>;
     watchFor(propertyName: string, neededValue: T): Promise<T>;
 }
-export declare const watcherCreator: <T, M>(obj: T, provider?: providerType, methods?: M, broadcastName?: string) => Watcher<T, M>;
+export declare const watcherCreator: <T, M>(obj: T, provider?: providerType, methods?: M, broadcastName?: string) => Watcher<T, M, undefined>;

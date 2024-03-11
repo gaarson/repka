@@ -1,2 +1,3 @@
-export { RepkaService as repka } from './repository';
-export { IRepositoryService } from './repository';
+import { IRepositoryService } from './repository';
+declare const repka: IRepositoryService;
+export { repka, IRepositoryService };
