@@ -103,13 +103,16 @@ export const initializeState = function<T, M>(
   this.actions = newActions;
 }
 
-function getAllMethodNames(obj): string[] {
-  let methods = new Set<string>();
-  while (obj = Reflect.getPrototypeOf(obj)) {
-    let keys = Reflect.ownKeys(obj)
-    keys.forEach((k: string) => methods.add(k));
-  }
-  return [...methods];
+function getAllMethodNames(toCheck) {
+    const props = [];
+    let obj = toCheck;
+    do {
+        props.push(...Object.getOwnPropertyNames(obj));
+    } while (obj = Object.getPrototypeOf(obj));
+    
+    return props.sort().filter((e, i, arr) => { 
+       if (e!=arr[i+1] && typeof toCheck[e] == 'function') return true;
+    });
 }
 
 export function repositoryCreator<
