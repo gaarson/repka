@@ -103,6 +103,15 @@ export const initializeState = function<T, M>(
   this.actions = newActions;
 }
 
+function getAllMethodNames(obj): string[] {
+  let methods = new Set<string>();
+  while (obj = Reflect.getPrototypeOf(obj)) {
+    let keys = Reflect.ownKeys(obj)
+    keys.forEach((k: string) => methods.add(k));
+  }
+  return [...methods];
+}
+
 export function repositoryCreator<
   RepositoryPort extends { [key: string]: unknown },
   Controller = undefined,
@@ -118,9 +127,7 @@ export function repositoryCreator<
   let repo = null;
 
   if (controller) {
-    const constructorKeys = controller.constructor.name === 'Object' 
-      ? Object.keys(controller) 
-      : Object.getOwnPropertyNames(Object.getPrototypeOf(controller));
+    const constructorKeys = getAllMethodNames(controller);
 
     methods = constructorKeys.reduce(
       (prev, curr) => (curr !== 'constructor' && typeof controller[curr] === 'function') 
