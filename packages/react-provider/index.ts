@@ -1,6 +1,8 @@
 import React from 'react';
 import { FIELDS_PREFIX } from 'core';
 
+export type reactProviderType<T, M> = (parameter?: keyof T) => [T, M] | T[keyof T];
+
 export function reactProvider<T, M>(parameter?: keyof T): [T, M] {
   let useSync;
   let key = React.useId 

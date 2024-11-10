@@ -4,10 +4,11 @@ export interface IRepositoryService {
   <
     RepositoryPort extends { [key: string]: unknown },
     Controller = undefined,
+    Provider = ((() => [RepositoryPort, Omit<Controller, 'repo'>]) & RepositoryPort)
   >(
     defaultObject?: RepositoryPort,
     controller?: Controller & { repo?: IRepositoryService },
-  ): (() => [RepositoryPort, Omit<Controller, 'repo'>]) & RepositoryPort;
+  ): Provider;
 
   keys: string[];
   actions: IWatcher<any, any>;
@@ -15,28 +16,29 @@ export interface IRepositoryService {
     data?: T,  
     options?: { methods?: M, prevActions?: any, provider?: any }
   ): void;
-  initRepository?<T, M> (repo?: T, options?: {
-    methods?: M, provider?: any, prevActions?: any
+  initRepository?<T, M, P> (repo?: T, options?: {
+    methods?: M, provider?: P, prevActions?: any
   }): IWatcher<T, M>;
 
   __call: <
     RepositoryPort extends { [key: string]: unknown },
     Controller = undefined,
+    Provider = ((() => [RepositoryPort, Omit<Controller, 'repo'>]) & RepositoryPort)
   >(
     defaultObject?: RepositoryPort,
     controller?: Controller & { repo?: IRepositoryService },
-  ) => (() => [RepositoryPort, Omit<Controller, 'repo'>]) & RepositoryPort;
+  ) => Provider;
 }
 
 export class RepositoryService extends Function {
   keys: string[];
   actions: IWatcher<any, any>;
-  initializeState<T, M>(
+  initializeState<T, M, P>(
     data?: T,  
-    options?: { methods?: M, prevActions?: any, provider?: any }
+    options?: { methods?: M, prevActions?: any, provider?: P }
   ): void {};
-  initRepository?<T, M> (repo?: T, options?: {
-    methods?: M, provider?: any, prevActions?: any
+  initRepository?<T, M, P> (repo?: T, options?: {
+    methods?: M, provider?: P, prevActions?: any
   }): IWatcher<T, M>;
 
   __call: <
@@ -45,7 +47,7 @@ export class RepositoryService extends Function {
   >(
     defaultObject?: RepositoryPort,
     controller?: Controller & { repo?: IRepositoryService },
-  ) => (() => [RepositoryPort, Omit<Controller, 'repo'>]) & RepositoryPort;
+  ) => ((a: any) => [RepositoryPort, Omit<Controller, 'repo'>]) & RepositoryPort;
 
   constructor() {
     super();
@@ -58,18 +60,18 @@ export class RepositoryService extends Function {
 }
 
 interface initRepoBoundFunction {
-    <T, M>(rp?: T, options?: {
+    <T, M, P>(rp?: T, options?: {
       methods?: M,
-      provider?: any,
+      provider?: P,
       prevActions?: any
     }): IWatcher<T, M>;
     call<T, M>(this: Function, ...argArray: any[]): IWatcher<T, M>;
 }
-export const initRepository: initRepoBoundFunction = function <T, M>(
+export const initRepository: initRepoBoundFunction = function <T, M, P>(
   repo: T,
   options: {
     methods?: M,
-    provider?: any,
+    provider?: P,
     prevActions?: any
   } = {}
 ): IWatcher<T, M> {
@@ -106,29 +108,30 @@ export const initializeState = function<T, M>(
   this.actions = newActions;
 }
 
-function getAllMethodNames(toCheck) {
-    const props = [];
-    let obj = toCheck;
-    do {
-        props.push(...Object.getOwnPropertyNames(obj));
-    } while (obj = Object.getPrototypeOf(obj));
-    
-    return props.sort().filter((e, i, arr) => { 
-       if (e!=arr[i+1] && typeof toCheck[e] == 'function') return true;
-    });
+function getAllMethodNames(toCheck: {[key: string]: unknown}) {
+  const props = [];
+  let obj = toCheck;
+  do {
+    props.push(...Object.getOwnPropertyNames(obj));
+  } while (obj = Object.getPrototypeOf(obj));
+  
+  return props.sort().filter((e, i, arr) => { 
+    if (e!=arr[i+1] && typeof toCheck[e] == 'function') return true;
+  });
 }
 
 export function repositoryCreator<
   RepositoryPort extends { [key: string]: unknown },
   Controller = undefined,
+  Provider = ((() => [RepositoryPort, Omit<Controller, 'repo'>]) & RepositoryPort)
 >(
   defaultObject?: RepositoryPort,
   controller?: Controller & { repo?: IRepositoryService },
   { provider }: {
-    provider?: any,
+    provider?: Provider,
     broadcastName?: string
   } = {}
-): (() => [RepositoryPort, Omit<Controller, 'repo'>]) & RepositoryPort {
+): Provider {
   let methods: Controller;
   let repo = null;
 
@@ -151,7 +154,7 @@ export function repositoryCreator<
       { methods, prevActions, provider: provider || prevActions?.savedProvider || this?.actions?.savedProvider }
     );
   } else {
-    repo = initRepository<RepositoryPort, Controller>(
+    repo = initRepository<RepositoryPort, Controller, Provider>(
       defaultObject, 
       { provider: provider || this?.actions?.savedProvider, methods }
     );
