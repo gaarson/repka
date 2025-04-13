@@ -18,7 +18,7 @@ export interface IRepositoryService {
   ): void;
   initRepository?<T, M, P> (repo?: T, options?: {
     methods?: M, provider?: P, prevActions?: any
-  }): IWatcher<T, M>;
+  }): IWatcher<T, M, P>;
 
   __call: <
     RepositoryPort extends { [key: string]: unknown },
@@ -60,11 +60,11 @@ export class RepositoryService extends Function {
 }
 
 interface initRepoBoundFunction {
-    <T, M, P>(rp?: T, options?: {
+    <T, M, P = undefined>(rp?: T, options?: {
       methods?: M,
       provider?: P,
       prevActions?: any
-    }): IWatcher<T, M>;
+    }): IWatcher<T, M, P>;
     call<T, M>(this: Function, ...argArray: any[]): IWatcher<T, M>;
 }
 export const initRepository: initRepoBoundFunction = function <T, M, P>(
@@ -74,7 +74,7 @@ export const initRepository: initRepoBoundFunction = function <T, M, P>(
     provider?: P,
     prevActions?: any
   } = {}
-): IWatcher<T, M> {
+): IWatcher<T, M, P> {
   const keys = Object.keys(repo || {});
 
   const withOnUpdate: T = keys.reduce((
@@ -90,7 +90,7 @@ export const initRepository: initRepoBoundFunction = function <T, M, P>(
     return { ...prev, [curr]: value };
   }, repo || {} as T);
 
-  return watcherCreator<T, M>(
+  return watcherCreator<T, M, P>(
     withOnUpdate, 
     options.provider, 
     options.methods
@@ -116,7 +116,7 @@ function getAllMethodNames(toCheck: {[key: string]: unknown}) {
   } while (obj = Object.getPrototypeOf(obj));
   
   return props.sort().filter((e, i, arr) => { 
-    if (e!=arr[i+1] && typeof toCheck[e] == 'function') return true;
+    if (e != arr[i + 1] && typeof toCheck[e] == 'function') return true;
   });
 }
 

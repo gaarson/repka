@@ -21,10 +21,10 @@ export type proxyHandlerType<T> = {
 export interface IWatcher<
   T = { [key: string]: unknown },
   M = undefined,
-  P = undefined
+  P = unknown
 > {
-  sourceObj: T & providerType<T, M>;
-  savedProvider: P;
+  sourceObj: T & (P | providerType<T, M>);
+  savedProvider?: P;
   SPECIAL_KEY: specialKeyLiteralType;
   broadcast: any;
 
@@ -58,10 +58,9 @@ export type watcherCreatorType = <T, M>(
   broadcastName?: string
 ) => Watcher<T, M>;
 
-export class Watcher<T = {[key: string]: unknown}, M = undefined,  P = undefined> implements IWatcher<T, M, P> {
-
+export class Watcher<T = {[key: string]: unknown}, M = undefined, P = unknown> implements IWatcher<T, M, P> {
   savedProvider: P;
-  sourceObj: T & providerType<T, M>;
+  sourceObj: T & (P | providerType<T, M>);
   SPECIAL_KEY: specialKeyLiteralType = SPECIAL_KEY;
   broadcast: any;
 
@@ -79,7 +78,7 @@ export class Watcher<T = {[key: string]: unknown}, M = undefined,  P = undefined
         initObj, 
         options.methods, 
         options.provider || this.savedProvider
-      ) as T & providerType<T, M>;
+      ) as T & (P | providerType<T, M>);
     }
     if (options.broadcastName) this.createBroadcast(options.broadcastName);
   }
@@ -172,15 +171,14 @@ export class Watcher<T = {[key: string]: unknown}, M = undefined,  P = undefined
   }
 }
 
-export const watcherCreator = <T, M>(
+export const watcherCreator = <T, M, P>(
   obj: T,
-  provider?: providerType,
+  provider?: P,
   methods?: M,
   broadcastName?: string
-): Watcher<T, M> => {
-  const watcher = new Watcher<T, M>();
+): Watcher<T, M, P> => {
+  const watcher = new Watcher<T, M, P>();
   watcher.init(obj, { provider, methods, broadcastName });
   return watcher;
 };
-
 

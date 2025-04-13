@@ -1,16 +1,28 @@
-import { useState } from 'react'
+import { repka } from 'repka';
+
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-import { repka } from 'repka';
 
-const state = repka({foo: 'asfas'});
+const state = repka<{foo: number}, {toDo: () => void}>({foo: 0}, { toDo()  {
+  if (this.repo) {
+    this.repo.actions.set('foo', this.repo.actions.get('foo') + 1)
+  }
+} });
+
+const Button = (
+  { repo, onClick }: { repo: any, onClick: () => void }
+) => {
+  // console.log(repo)
+  return (
+    <button onClick={onClick}>
+      count is {repo.foo}
+    </button>
+  )
+}
 
 function App() {
-  const [data] = state()
-  const [count, setCount] = useState(0)
-
-  console.log(data.foo)
+  const [data, methods] = state();
   return (
     <>
       <div>
@@ -22,11 +34,8 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
-      <h6>{data.foo}</h6>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
+        <Button repo={data} onClick={methods.toDo} />
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
