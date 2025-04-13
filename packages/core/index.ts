@@ -20,7 +20,7 @@ const get = (obj, prop) => {
   if (
     obj[`${FIELDS_PREFIX}muppet`][SPECIAL_KEY] 
     && prop !== obj[`${FIELDS_PREFIX}muppet`][SPECIAL_KEY]
-    && !prop.startsWith(FIELDS_PREFIX) 
+    && (typeof prop === 'string' && !prop.startsWith(FIELDS_PREFIX)) 
   ) {
     obj[`${FIELDS_PREFIX}muppet`][obj[`${FIELDS_PREFIX}muppet`][SPECIAL_KEY]] = false;
     obj[`${FIELDS_PREFIX}criticalFields`][obj[`${FIELDS_PREFIX}muppet`][SPECIAL_KEY]] = [...new Set([
@@ -28,7 +28,7 @@ const get = (obj, prop) => {
       prop
     ])];
   }
-  if (prop.startsWith(FIELDS_PREFIX) || prop === '__call') {
+  if ((typeof prop === 'string' && prop.startsWith(FIELDS_PREFIX)) || prop === '__call') {
     return obj[prop]
   }
 
@@ -36,7 +36,7 @@ const get = (obj, prop) => {
 }
 
 const set = (obj, prop, value): boolean => {
-  if (prop.startsWith(FIELDS_PREFIX) || prop === '__call') {
+  if ((typeof prop === 'string' && prop.startsWith(FIELDS_PREFIX)) || prop === '__call') {
     obj[prop] = value;
     return true;
   } 
