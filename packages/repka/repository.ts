@@ -97,8 +97,11 @@ export const initRepository: initRepoBoundFunction = function <T, M>(
 
 export const initializeState = function<T, M>(
   data?: T, 
-  options?: { methods?: M, prevActions?: any, provider?: any }
+  options: { methods?: M, prevActions?: any, provider?: any } = {}
 ): void {
+  if (!options.prevActions) options.prevActions = this?.actions;
+  if (!options.provider) options.provider = this?.actions?.savedProvider;
+
   const newActions = initRepository.call<T, M>(this, data, options);
   this.actions = newActions;
 }
