@@ -46,16 +46,12 @@ class SimpleStore implements ISimpleStore {
 
 ```typescript
 // store.ts
-import { createSource } from 'repka';
-import { simpleReactProvider } from 'repka-react'; // Предполагаемый импорт
+import { repka } from 'repka';
 
 // ...определение класса SimpleStore
 
 // Создаем и экспортируем наш store
-export const simpleStore = createSource(
-  new SimpleStore(),
-  { main: simpleReactProvider, getter: simpleReactProvider }
-);
+export const simpleStore = repka<ISimpleStore>(new SimpleStore());
 ```
 
 ### 3\. Используйте в React-компоненте

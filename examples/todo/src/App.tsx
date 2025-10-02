@@ -4,8 +4,9 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-const state = repka<{foo: number, toDo: () => void}>({
-  foo: 0, 
+const state = repka<{foo: number, bar: string, toDo: () => void}>({
+  foo: 0,
+  bar: 'str',
   toDo() {
     this.foo = this.foo + 1;
   } 
@@ -35,6 +36,10 @@ function App() {
       <h1>Vite + React</h1>
       <div className="card">
         <Button onClick={() => state.toDo()} />
+
+        <button onClick={() => state.bar = 'change'}>
+          another count is {state.bar}
+        </button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
