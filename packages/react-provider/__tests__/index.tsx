@@ -1,108 +1,155 @@
 import React from 'react';
 import {render, act, fireEvent} from '@testing-library/react';
 
-import { reactProvider, reactProviderType } from '../index';
-import { createRepository } from '../../repka/create';
+import { createSource } from '../../core/index';
+import { simpleReactProvider } from '../index';
+import { FIELDS_PREFIX } from '../../core/domain';
 
-const EXPECTED_STRING = 'bar'
-const EXPECTED_STRING_CHANGED = 'foo';
-const EXPECTED_NUMBER = 161
-const EXPECTED_NUMBER_CHANGED = 156;
+const EXPECTED_SIMPLE_STRING = 'string'
+const EXPECTED_SIMPLE_STRING_CHANGED = 'foo';
+const EXPECTED_SIMPLE_NUMBER = 123
+const EXPECTED_SIMPLE_NUMBER_CHANGED = 156;
 
-type repoType = { foo: string, bar: number };
-type controllerType = { method: () => void };
+interface ISimple {
+  bool: boolean, 
+  str: string, 
+  num: number,
+  doSome(): void;
+}
 
-describe('create basic provider', () => {
-  const repka = createRepository(reactProvider);
-  const state = repka<{ foo: string, bar: number }, controllerType>(
-    { foo: EXPECTED_STRING, bar: EXPECTED_NUMBER },
-    { 
-      method() {
-        this.repo.actions.set('bar', EXPECTED_NUMBER);
-        this.repo.actions.set('foo', EXPECTED_STRING);
-      } 
-    }
-  );
+class Simple implements ISimple {
+ bool = true;
+ str = 'string';
+ num = 123;
+ doSome() {
+   this.str = EXPECTED_SIMPLE_STRING
+   this.num = EXPECTED_SIMPLE_NUMBER
 
-  const Component = () => {
-    const [{ foo, bar }, { method }] = state();
-
-    return (
-      <React.Fragment>
-        <div>{foo}</div>
-        <div>{bar}</div>
-        <button onClick={method}>click</button>
-      </React.Fragment>
-    )
-  }
-
-  test('should return initial expected values from div', () => {
-    const { getByText } = render(<Component />);
-    expect(getByText(EXPECTED_STRING).textContent).toBe(EXPECTED_STRING);
-    expect(getByText(EXPECTED_NUMBER).textContent).toBe(EXPECTED_NUMBER.toString());
-  });
-
-  test('should return changed values from div after state properties changes', () => {
-    const { getByText } = render(<Component />);
-
-    expect(getByText(EXPECTED_STRING).textContent).toBe(EXPECTED_STRING);
-    expect(getByText(EXPECTED_NUMBER).textContent).toBe(EXPECTED_NUMBER.toString());
-
-    act(() => { 
-      state.foo = EXPECTED_STRING_CHANGED;
-      state.bar = EXPECTED_NUMBER_CHANGED;
-    })
-
-    expect(getByText(EXPECTED_STRING_CHANGED).textContent).toBe(EXPECTED_STRING_CHANGED);
-    expect(getByText(EXPECTED_NUMBER_CHANGED).textContent).toBe(EXPECTED_NUMBER_CHANGED.toString());
-  });
-
-  test('component call method from state controller', () => {
-    const { getByText } = render(<Component />);
-    
-    fireEvent.click(getByText('click'));
-
-    expect(getByText(EXPECTED_STRING).textContent).toBe(EXPECTED_STRING);
-    expect(getByText(EXPECTED_NUMBER).textContent).toBe(EXPECTED_NUMBER.toString());
-  });
-});
+   return; 
+ }
+}
 
 describe('create simple provider', () => {
-  const repka = createRepository<
-    reactProviderType<repoType, unknown>
-  >(reactProvider);
-  const state = repka<repoType>(
-    { foo: EXPECTED_STRING, bar: EXPECTED_NUMBER },
+  const simple = createSource<
+    ISimple, 
+    {main: typeof simpleReactProvider, getter: typeof simpleReactProvider}
+  >(
+    new Simple(), 
+    {main: simpleReactProvider, getter: simpleReactProvider}
   );
 
   const SimplestUsageComponent = () => {
     return (
       <React.Fragment>
-        <div>{state('foo')}</div>
-        <div>{state('bar')}</div>
+        <div>{simple.str}</div>
+        <div>{simple.num}</div>
+        <button onClick={() => simple.doSome()}>click</button>
       </React.Fragment>
     )
   }
+  const fooRenderSpy = jest.fn();
+  const barRenderSpy = jest.fn();
 
+  beforeEach(() => {
+    fooRenderSpy.mockClear();
+    barRenderSpy.mockClear();
+  });
+
+  const FooComponent = () => {
+    fooRenderSpy();
+    return <div>{simple.str}</div>;
+  };
+
+  const BarComponent = () => {
+    barRenderSpy();
+    return <div>{simple.num}</div>;
+  };
+
+  const ControlPanel = () => {
+    return (
+      <>
+        <button onClick={() => (simple.str = EXPECTED_SIMPLE_STRING_CHANGED)}>Change str</button>
+        <button onClick={() => (simple.num = EXPECTED_SIMPLE_NUMBER_CHANGED)}>Change num</button>
+      </>
+    );
+  };
+
+  const TestContainer = () => (
+    <>
+      <FooComponent />
+      <BarComponent />
+      <ControlPanel />
+    </>
+  );
 
   test('should return initial expected values from div', () => {
-    const { getByText } = render(<SimplestUsageComponent />);
-    expect(getByText(EXPECTED_STRING).textContent).toBe(EXPECTED_STRING);
-    expect(getByText(EXPECTED_NUMBER).textContent).toBe(EXPECTED_NUMBER.toString());
+    const { getByText, unmount } = render(<SimplestUsageComponent />);
+    expect(getByText(EXPECTED_SIMPLE_STRING).textContent).toBe(EXPECTED_SIMPLE_STRING);
+    expect(getByText(EXPECTED_SIMPLE_NUMBER).textContent).toBe(EXPECTED_SIMPLE_NUMBER.toString());
+
+    unmount()
   });
 
   test('should return changed values from div after state properties changes', () => {
-    const { getByText } = render(<SimplestUsageComponent />);
+    const { getByText, unmount } = render(<SimplestUsageComponent />);
 
-    expect(getByText(EXPECTED_STRING).textContent).toBe(EXPECTED_STRING);
-    expect(getByText(EXPECTED_NUMBER).textContent).toBe(EXPECTED_NUMBER.toString());
+    expect(getByText(EXPECTED_SIMPLE_STRING).textContent).toBe(EXPECTED_SIMPLE_STRING);
+    expect(getByText(EXPECTED_SIMPLE_NUMBER).textContent).toBe(EXPECTED_SIMPLE_NUMBER.toString());
 
     act(() => { 
-      state.foo = EXPECTED_STRING_CHANGED;
-      state.bar = EXPECTED_NUMBER_CHANGED;
+      simple.str = EXPECTED_SIMPLE_STRING_CHANGED;
+      simple.num = EXPECTED_SIMPLE_NUMBER_CHANGED;
     })
 
-    expect(getByText(EXPECTED_STRING_CHANGED).textContent).toBe(EXPECTED_STRING_CHANGED);
-    expect(getByText(EXPECTED_NUMBER_CHANGED).textContent).toBe(EXPECTED_NUMBER_CHANGED.toString());
+    expect(getByText(EXPECTED_SIMPLE_STRING_CHANGED).textContent).toBe(EXPECTED_SIMPLE_STRING_CHANGED);
+    expect(getByText(EXPECTED_SIMPLE_NUMBER_CHANGED).textContent).toBe(EXPECTED_SIMPLE_NUMBER_CHANGED.toString());
+
+    unmount()
   });
+
+  test('component call method from state controller', () => {
+    const { getByText, unmount } = render(<SimplestUsageComponent />);
+
+    fireEvent.click(getByText('click'));
+
+    expect(getByText(EXPECTED_SIMPLE_STRING).textContent).toBe(EXPECTED_SIMPLE_STRING);
+    expect(getByText(EXPECTED_SIMPLE_NUMBER).textContent).toBe(EXPECTED_SIMPLE_NUMBER.toString());
+
+    unmount()
+  });
+
+  test('should only rerender the component whose state slice has changed', () => {
+    const { getByText, unmount } = render(<TestContainer />);
+
+    expect(fooRenderSpy).toHaveBeenCalledTimes(1);
+    expect(barRenderSpy).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      fireEvent.click(getByText('Change str'));
+    });
+
+    expect(getByText(EXPECTED_SIMPLE_STRING_CHANGED).textContent).toBe(EXPECTED_SIMPLE_STRING_CHANGED);
+    expect(fooRenderSpy).toHaveBeenCalledTimes(2);
+    expect(barRenderSpy).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      fireEvent.click(getByText('Change num'));
+    });
+
+    expect(getByText(EXPECTED_SIMPLE_NUMBER_CHANGED).textContent).toBe(EXPECTED_SIMPLE_NUMBER_CHANGED.toString());
+    expect(fooRenderSpy).toHaveBeenCalledTimes(2);
+    expect(barRenderSpy).toHaveBeenCalledTimes(2); 
+
+    unmount()
+  });
+
+  test('should remove all unmounted listeners', () => {
+    const { unmount } = render(<SimplestUsageComponent />);
+
+    unmount();
+
+    expect(simple[`${FIELDS_PREFIX}criticalFields`]).toMatchObject({});
+    expect(simple[`${FIELDS_PREFIX}muppet`]).toMatchObject({});
+  });
+
 });

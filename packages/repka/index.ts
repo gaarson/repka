@@ -1,21 +1,10 @@
-import { 
-  IRepositoryService, 
-  RepositoryService, 
-  repositoryCreator,  
-  initRepository, 
-  initializeState,  
-} from './repository';
-import { reactProvider, reactProviderType } from 'react-provider';
+import { createSource } from 'core';
+import { simpleReactProvider } from 'react-provider';
 
-const repka: IRepositoryService = new RepositoryService() as IRepositoryService;
-
-repka.initRepository = initRepository;
-repka.initializeState = initializeState;
-repka.actions = initRepository<
-  {}, 
-  any, 
-  () => void //reactProviderType<{}, any>
->({}, { provider: reactProvider });
-repka.__call = repositoryCreator;
-
-export { repka, IRepositoryService };
+export const repka = <T>(obj: T) => createSource<
+  T, 
+  {main: typeof simpleReactProvider, getter: typeof simpleReactProvider}
+>(
+  obj,
+  {main: simpleReactProvider, getter: simpleReactProvider}
+);

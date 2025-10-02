@@ -1,8 +1,23 @@
-import { createSource, FIELDS_PREFIX } from '../index';
+import { FIELDS_PREFIX } from '../domain';
+import { createSource } from '../index';
+
+interface ITest {
+  bool: boolean, 
+  str: string, 
+  num: number,
+  doSome(): void;
+}
+
+class Test implements ITest {
+ bool = true;
+ str = 'string';
+ num = 123;
+ doSome() {
+   return; 
+ }
+}
 
 describe('createSource', () => {
-  type iniObjectType = { bool: boolean, str: string, num: number }
-  const initObject = { bool: true, str: 'string', num: 123 };
   const key = 'default';
 
   const notifier = jest.fn(() => {
@@ -15,20 +30,14 @@ describe('createSource', () => {
       if (
         this[`${FIELDS_PREFIX}listeners`][prop] &&
         typeof this[`${FIELDS_PREFIX}listeners`][prop] !== 'function'
-      ) this[`${FIELDS_PREFIX}listeners`][prop].set(key, notifier);
+      ) {
+        this[`${FIELDS_PREFIX}listeners`][prop].set(key, notifier);
+      } 
     });
     return this;
   });
 
-  let stateRepo;
-  let repoWithCustomProvider;
-  let customProviderRepo;
-
-  beforeEach(() => {
-    stateRepo = createSource<iniObjectType, { doSome: (() => void) }>(initObject, { doSome: () => { return; }});
-    repoWithCustomProvider = createSource<iniObjectType>(initObject, undefined, provider);
-    customProviderRepo = repoWithCustomProvider();
-  });
+  const stateRepo = createSource<ITest, { main: () => ITest }>(new Test(), {main: provider});
 
   test('initial values are the same', () => {
     expect(stateRepo.bool).toBe(true);
@@ -37,34 +46,29 @@ describe('createSource', () => {
   });
 
   test('default provider return correct values', () => {
-    const [obj, methods] = stateRepo();
+    const providerResult = stateRepo();
 
-    expect(methods).toHaveProperty('doSome');
-    expect(obj.bool).toBe(true);
-    expect(obj.str).toBe('string');
-    expect(obj.num).toBe(123);
+    expect(providerResult).toHaveProperty('doSome');
+    expect(providerResult.bool).toBe(true);
+    expect(providerResult.str).toBe('string');
+    expect(providerResult.num).toBe(123);
   }) 
 
-  test('should call the provider when creating a source', () => {
-    repoWithCustomProvider();
-    expect(provider).toHaveBeenCalled();
-  });
-  
-  test('should call notifier when value change', () => {
-    customProviderRepo['str'];
-    customProviderRepo['str'] = '123';
+  test('call notifier when value change', () => {
+    stateRepo['str'] = '123';
 
-    customProviderRepo[`${FIELDS_PREFIX}criticalFields`][key]
-    expect(customProviderRepo[`${FIELDS_PREFIX}criticalFields`][key]).toContain('str')
-    expect(customProviderRepo[`${FIELDS_PREFIX}muppet`][key]).toBe(true)
+    stateRepo[`${FIELDS_PREFIX}criticalFields`][key]
+    expect(stateRepo[`${FIELDS_PREFIX}criticalFields`][key]).toContain('str')
+    expect(stateRepo[`${FIELDS_PREFIX}muppet`][key]).toBe(true)
     expect(notifier).toHaveBeenCalled();
   });
 
-  test('should update properties and trigger onUpdate listeners correctly', () => {
+  test('update properties and trigger onUpdate listeners correctly', () => {
     const onUpdateMock = jest.fn();
     stateRepo[`${FIELDS_PREFIX}onUpdate`].push(onUpdateMock);
 
     stateRepo.bool = false;
+
     expect(stateRepo.bool).toBe(false);
     expect(stateRepo[`${FIELDS_PREFIX}data`].bool).toBe(false)
 

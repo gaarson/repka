@@ -1,4 +1,4 @@
-import { providerType, SPECIAL_KEY, FIELDS_PREFIX, createSource } from 'core';
+import { providerType, SPECIAL_KEY, FIELDS_PREFIX, createSource } from 'core/legacy';
 
 export type baseSourceObjType<T> = {
   [key: string]: T,

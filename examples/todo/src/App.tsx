@@ -4,25 +4,24 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-const state = repka<{foo: number}, {toDo: () => void}>({foo: 0}, { toDo()  {
-  if (this.repo) {
-    this.repo.actions.set('foo', this.repo.actions.get('foo') + 1)
-  }
-} });
+const state = repka<{foo: number, toDo: () => void}>({
+  foo: 0, 
+  toDo() {
+    this.foo = this.foo + 1;
+  } 
+});
 
 const Button = (
-  { repo, onClick }: { repo: any, onClick: () => void }
+  { onClick }: { onClick: () => void }
 ) => {
-  // console.log(repo)
   return (
     <button onClick={onClick}>
-      count is {repo.foo}
+      count is {state.foo}
     </button>
   )
 }
 
 function App() {
-  const [data, methods] = state();
   return (
     <>
       <div>
@@ -35,7 +34,7 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <Button repo={data} onClick={methods.toDo} />
+        <Button onClick={() => state.toDo()} />
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
