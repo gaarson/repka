@@ -1,4 +1,4 @@
-import { IWatcher, watcherCreator } from 'watcher';
+import { IWatcher, watcherCreator } from 'watcher/legacy';
 
 export interface IRepositoryService {
   <

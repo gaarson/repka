@@ -8,3 +8,5 @@ export const repka = <T>(obj: T) => createSource<
   obj,
   {main: simpleReactProvider, getter: simpleReactProvider}
 );
+
+export { watch } from 'watcher';

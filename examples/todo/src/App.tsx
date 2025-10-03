@@ -1,4 +1,4 @@
-import { repka } from 'repka';
+import { repka, watch } from 'repka';
 
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
@@ -21,6 +21,13 @@ const Button = (
     </button>
   )
 }
+
+const watchFor = async () => {
+  console.log('UPDATED VALUE', await watch(state, 'foo'));
+  watchFor();
+}
+
+watchFor();
 
 function App() {
   return (
