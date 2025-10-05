@@ -2,14 +2,21 @@
   "name": "repka",
   "version": "0.0.721",
   "description": "",
-  "main": "repka.js",
+  "main": "dist/repka/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node ./scripts/build.js",
-    "watch": "node ./scripts/watch.js"
+    "test": "our-scripts test -p packages",
+    "build": "our-scripts build -p packages -em -dts",
+    "watch": "our-scripts start -p packages -em -dts"
   },
-  "peerDependencies": {
-    "react": "^16.8.5 || ^17.0.0 || ^17.0.1 || ^18.0.0 || ^18.1.0 || ^18.2.0"
+  "author": "ruser",
+  "dependencies": {
+    "our-scripts": "github:gaarson/mycra",
+    "react-test-renderer": "^18.3.1",
+    "save-dev": "^0.0.1-security"
   },
-  "author": "rusel"
+  "devDependencies": {
+    "@testing-library/react": "^16.0.1",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.24"
+  }
 }

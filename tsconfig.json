@@ -1,26 +1,27 @@
 {
   "compilerOptions": {
-    "baseUrl": "src",
+    "baseUrl": "packages",
     "outDir": "./",
     "sourceMap": true,
     "noImplicitAny": false,
     "esModuleInterop": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "lib": ["ESNext", "dom"],
+    "lib": ["ESNext"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "declaration": true,
     "downlevelIteration": true,
     "module": "esNext",
     "target": "es2015",
+    "types": ["jest", "node"],
     "skipLibCheck": true,
-    "jsx": "preserve"
+    "paths": {
+      "@/*": ["packages/*"],
+    }
   },
-  "include": ["src"],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["dist/*/**.d.ts", "packages/*/**.ts"],
+  "exclude": ["node_modules"]
 }
 
 
