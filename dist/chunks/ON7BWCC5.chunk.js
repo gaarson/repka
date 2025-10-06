@@ -1,1 +1,0 @@
-import{b as t}from"./KFMMTQSC.chunk.js";var g=(n,i)=>{let a=n[`${t}onUpdate`].length;return new Promise(d=>{n[`${t}onUpdate`]=[...n[`${t}onUpdate`],e=>{i===e&&(d(n[i]),n[`${t}onUpdate`][a]=null,n[`${t}onUpdate`].every(o=>o===null)&&(n[`${t}onUpdate`]=[]))}]})};export{g as a};

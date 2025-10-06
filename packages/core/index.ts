@@ -95,7 +95,7 @@ export const createSource = <
 
     const methods = [...methodsKeys].reduce(
       (prev, curr) => (curr !== 'constructor' && typeof data[curr] === 'function') 
-        ? { ...prev, [curr]: data[curr] }
+        ? { ...prev, [curr]: data[curr].bind(proxy) }
         : prev,
       {} as T
     );
