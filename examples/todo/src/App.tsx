@@ -4,9 +4,10 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-const state = repka<{foo: number, bar: string, toDo: () => void}>({
+const state = repka<{foo: number, bar: string, puk: string, toDo: () => void}>({
   foo: 0,
   bar: 'str',
+  puk: 'poo',
   toDo() {
     this.foo = this.foo + 1;
   } 
@@ -30,6 +31,8 @@ const watchFor = async () => {
 watchFor();
 
 function App() {
+  const { puk } = state;
+
   return (
     <>
       <div>
@@ -44,6 +47,10 @@ function App() {
       <div className="card">
         <Button onClick={() => state.toDo()} />
 
+        <button onClick={() => state.puk = 'POO'}>
+          change puk {state.bar}
+        </button>
+
         <button onClick={() => state.bar = 'change'}>
           another count is {state.bar}
         </button>
@@ -53,6 +60,7 @@ function App() {
       </div>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
+        {puk}
       </p>
     </>
   )
