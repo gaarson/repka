@@ -1,1 +1,1 @@
-import{a as r}from"../chunks/ZIDYUKAU.chunk.js";import{a as e}from"../chunks/3WQVPN7Q.chunk.js";import{a as o}from"../chunks/2BXAAFRH.chunk.js";import"../chunks/KFMMTQSC.chunk.js";var n=t=>r(t,{main:e,getter:e});export{n as repka,o as watch};
+import{a as r}from"../chunks/ZIDYUKAU.chunk.js";import{a as e}from"../chunks/3WQVPN7Q.chunk.js";import{a as o}from"../chunks/2BXAAFRH.chunk.js";import"../chunks/KFMMTQSC.chunk.js";var s=t=>r(t,{main:e,getter:e});export{s as repka,o as watch};
