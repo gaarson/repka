@@ -9,12 +9,16 @@ export function simpleReactProvider<T>(prop: keyof T): T  {
   let useSync;
   let key;
 
-  key = React.useId 
-    ? React.useId()
-    : React.useRef(parseInt(String((Math.random() * 10000000)), 10).toString()).current
+  try {
+    key = React.useId 
+      ? React.useId()
+      : React.useRef(parseInt(String((Math.random() * 10000000)), 10).toString()).current
 
-  if (React.useId) {
-    useSync = React.useSyncExternalStore;
+    if (React.useId) {
+      useSync = React.useSyncExternalStore;
+    }
+  } catch (error) {
+    return this[`${FIELDS_PREFIX}data`][prop];
   }
 
   const state = useSync(notify => {
