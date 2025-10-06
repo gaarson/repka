@@ -2,20 +2,19 @@ import React from 'react';
 import { FIELDS_PREFIX } from 'core/domain';
 
 export function simpleReactProvider<T>(prop: keyof T): T  {
+  if (!React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentDispatcher?.current) {
+    return this[`${FIELDS_PREFIX}data`][prop];
+  }
+
   let useSync;
   let key;
 
-  try {
-    key = React.useId 
-      ? React.useId()
-      : React.useRef(parseInt(String((Math.random() * 10000000)), 10).toString()).current
+  key = React.useId 
+    ? React.useId()
+    : React.useRef(parseInt(String((Math.random() * 10000000)), 10).toString()).current
 
-    if (React.useId) {
-      useSync = React.useSyncExternalStore;
-    }
-
-  } catch (_) {
-    return this[`${FIELDS_PREFIX}data`][prop];
+  if (React.useId) {
+    useSync = React.useSyncExternalStore;
   }
 
   const state = useSync(notify => {
