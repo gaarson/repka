@@ -14,6 +14,8 @@
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "our-scripts": "github:gaarson/mycra#tests-update-rework",
     "react-test-renderer": "^18.3.1",
     "@testing-library/react": "^16.0.1",
