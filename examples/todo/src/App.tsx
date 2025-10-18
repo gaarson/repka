@@ -4,12 +4,37 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-const state = repka<{foo: number, bar: string, puk: string, toDo: () => void}>({
+const state = repka<{
+  foo: number, 
+  bar: string, 
+  puk: string, 
+  obj: {
+    puk: {
+      bar: {
+        foo: string,
+        num: number
+      }
+    }
+  },
+  toDo: () => void,
+  toDoWithObj: () => void
+}>({
   foo: 0,
   bar: 'str',
   puk: 'poo',
+  obj: {
+    puk: { 
+      bar: {foo: 'foo_string', num: 123} 
+    }
+  },
   toDo() {
     this.foo = this.foo + 1;
+  }, 
+  toDoWithObj() {
+    this.obj = {puk: {bar: { 
+      foo: this.obj.puk.bar.foo === 'foo_string' ? 'foo_string_new' : 'foo_string',  
+      num: this.obj.puk.bar.num === 321 ? 123 : 321
+    }}};
   } 
 });
 
@@ -62,6 +87,19 @@ function App() {
         Click on the Vite and React logos to learn more
         {puk}
       </p>
+
+      <div className="card">
+        <button onClick={() => state.toDoWithObj()}>
+          SWITCH OBJECT
+        </button>
+
+        <p>
+          STATE OF INCLUDED STRING {state.obj.puk.bar.foo}
+        </p>
+        <p>
+          STATE OF INCLUDED NUM {state.obj.puk.bar.num}
+        </p>
+      </div>
     </>
   )
 }
