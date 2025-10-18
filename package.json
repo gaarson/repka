@@ -9,14 +9,12 @@
     "watch": "our-scripts start -p packages -em -dts"
   },
   "author": "ruser",
-  "dependencies": {
-    "our-scripts": "github:gaarson/mycra#tests-update-rework"
-  },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "our-scripts": "github:gaarson/mycra#tests-update-rework",
     "react-test-renderer": "^18.3.1",
     "@testing-library/react": "^16.0.1",
     "@types/jest": "^29.5.12",
