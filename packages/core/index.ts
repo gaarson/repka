@@ -2,16 +2,19 @@ import {ICallable, Callable, SPECIAL_KEY, FIELDS_PREFIX} from './domain';
 
 const get = (obj, prop) => {
   if (
-    obj[`${FIELDS_PREFIX}muppet`][SPECIAL_KEY] 
-    && prop !== obj[`${FIELDS_PREFIX}muppet`][SPECIAL_KEY]
-    && (typeof prop === 'string' && !prop.startsWith(FIELDS_PREFIX)) 
+    obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY) // Используем .get()
+    && prop !== obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY) // Используем .get()
+    && (typeof prop === 'string' && !prop.startsWith(FIELDS_PREFIX))
     && !obj[`${FIELDS_PREFIX}methods`][prop]
   ) {
-    obj[`${FIELDS_PREFIX}muppet`][obj[`${FIELDS_PREFIX}muppet`][SPECIAL_KEY]] = false;
-    obj[`${FIELDS_PREFIX}criticalFields`][obj[`${FIELDS_PREFIX}muppet`][SPECIAL_KEY]] = [...new Set([
-      ...(obj[`${FIELDS_PREFIX}criticalFields`][obj[`${FIELDS_PREFIX}muppet`][SPECIAL_KEY]] || []),
+    const currentKey = obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY);
+    obj[`${FIELDS_PREFIX}muppet`].set(currentKey, false); // Используем .set()
+    
+    const currentFields = obj[`${FIELDS_PREFIX}criticalFields`].get(currentKey) || []; // Используем .get()
+    obj[`${FIELDS_PREFIX}criticalFields`].set(currentKey, [...new Set([ // Используем .set()
+      ...currentFields,
       prop
-    ])];
+    ])]);
   }
   if ((typeof prop === 'string' && prop.startsWith(FIELDS_PREFIX)) || prop === '__call') {
     return obj[prop]
@@ -27,7 +30,7 @@ const set = (obj, prop, value): boolean => {
   if ((typeof prop === 'string' && prop.startsWith(FIELDS_PREFIX)) || prop === '__call') {
     obj[prop] = value;
     return true;
-  } 
+  }
 
   if (!obj[`${FIELDS_PREFIX}methods`][prop]) {
     obj[`${FIELDS_PREFIX}data`] = {
@@ -36,10 +39,11 @@ const set = (obj, prop, value): boolean => {
     };
 
     if (obj[`${FIELDS_PREFIX}listeners`][prop] && obj[`${FIELDS_PREFIX}listeners`][prop].size) {
+      // 'key' здесь - это и есть 'notify' функция
       obj[`${FIELDS_PREFIX}listeners`][prop].forEach((notify, key) => {
-        if (obj[`${FIELDS_PREFIX}muppet`][key] !== undefined 
-          && obj[`${FIELDS_PREFIX}muppet`][key] === false) { 
-          obj[`${FIELDS_PREFIX}muppet`][key] = true; 
+        if (obj[`${FIELDS_PREFIX}muppet`].has(key) // Используем .has()
+            && obj[`${FIELDS_PREFIX}muppet`].get(key) === false) { // Используем .get()
+          obj[`${FIELDS_PREFIX}muppet`].set(key, true); // Используем .set()
         }
 
         notify();
@@ -64,7 +68,7 @@ function getAllMethodNames(toCheck: {[key: string]: unknown}) {
     props.push(...Object.getOwnPropertyNames(obj));
   } while (obj = Object.getPrototypeOf(obj));
   
-  return props.sort().filter((e, i, arr) => { 
+  return props.sort().filter((e, i, arr) => {
     if (e != arr[i + 1] && typeof toCheck[e] == 'function') return true;
   });
 }
@@ -94,7 +98,7 @@ export const createSource = <
     const proxy: T & ICallable<ReturnType<O['main']>, Parameters<O['main']>> = new Proxy(obj, {set, get});
 
     const methods = [...methodsKeys].reduce(
-      (prev, curr) => (curr !== 'constructor' && typeof data[curr] === 'function') 
+      (prev, curr) => (curr !== 'constructor' && typeof data[curr] === 'function')
         ? { ...prev, [curr]: data[curr].bind(proxy) }
         : prev,
       {} as T
@@ -102,12 +106,16 @@ export const createSource = <
     proxy[`${FIELDS_PREFIX}methods`] = methods;
     proxy[`${FIELDS_PREFIX}onUpdate`] = [];
     proxy[`${FIELDS_PREFIX}data`] = data;
-    proxy[`${FIELDS_PREFIX}criticalFields`] = {};
-    proxy[`${FIELDS_PREFIX}muppet`] = {};
+    
+    // === ИЗМЕНЕНИЯ ЗДЕСЬ ===
+    proxy[`${FIELDS_PREFIX}criticalFields`] = new Map(); // Было {}
+    proxy[`${FIELDS_PREFIX}muppet`] = new Map(); // Было {}
+    // =======================
+
     proxy[`${FIELDS_PREFIX}listeners`] = Object.keys(obj).reduce(
-      (prev, key) => !key.startsWith(FIELDS_PREFIX) && key !== '__call' 
-        ? ({ ...prev, [key]: new Map() }) 
-        : prev, 
+      (prev, key) => !key.startsWith(FIELDS_PREFIX) && key !== '__call'
+        ? ({ ...prev, [key]: new Map() })
+        : prev,
         {}
     );
 

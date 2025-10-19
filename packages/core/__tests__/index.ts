@@ -1,20 +1,20 @@
-import { FIELDS_PREFIX } from '../domain';
+import { FIELDS_PREFIX, SPECIAL_KEY } from '../domain';
 import { createSource } from '../index';
 
 interface ITest {
-  bool: boolean, 
-  str: string, 
+  bool: boolean,
+  str: string,
   num: number,
   doSome(): void;
 }
 
 class Test implements ITest {
- bool = true;
- str = 'string';
- num = 123;
- doSome() {
-   return; 
- }
+  bool = true;
+  str = 'string';
+  num = 123;
+  doSome() {
+    return;
+  }
 }
 
 describe('createSource', () => {
@@ -25,19 +25,26 @@ describe('createSource', () => {
   });
 
   const provider = jest.fn(function () {
-    this[`${FIELDS_PREFIX}muppet`]['__PROVIDER_ID__'] = key;
+    this[`${FIELDS_PREFIX}muppet`].set(SPECIAL_KEY, key);
+    this[`${FIELDS_PREFIX}muppet`].set(key, false);
+
     Object.keys(this[`${FIELDS_PREFIX}data`]).forEach(prop => {
       if (
         this[`${FIELDS_PREFIX}listeners`][prop] &&
         typeof this[`${FIELDS_PREFIX}listeners`][prop] !== 'function'
       ) {
         this[`${FIELDS_PREFIX}listeners`][prop].set(key, notifier);
-      } 
+      }
     });
     return this;
   });
 
-  const stateRepo = createSource<ITest, { main: () => ITest }>(new Test(), {main: provider});
+  const stateRepo = createSource<ITest, { main: () => ITest }>(new Test(), { main: provider });
+
+  beforeEach(() => {
+    notifier.mockClear();
+    provider.mockClear();
+  });
 
   test('initial values are the same', () => {
     expect(stateRepo.bool).toBe(true);
@@ -52,15 +59,18 @@ describe('createSource', () => {
     expect(providerResult.bool).toBe(true);
     expect(providerResult.str).toBe('string');
     expect(providerResult.num).toBe(123);
-  }) 
+  });
 
   test('call notifier when value change', () => {
+    stateRepo();
+    
+    expect(notifier).not.toHaveBeenCalled();
+    expect(stateRepo[`${FIELDS_PREFIX}muppet`].get(key)).toBe(false);
+
     stateRepo['str'] = '123';
 
-    stateRepo[`${FIELDS_PREFIX}criticalFields`][key]
-    expect(stateRepo[`${FIELDS_PREFIX}criticalFields`][key]).toContain('str')
-    expect(stateRepo[`${FIELDS_PREFIX}muppet`][key]).toBe(true)
     expect(notifier).toHaveBeenCalled();
+    expect(stateRepo[`${FIELDS_PREFIX}muppet`].get(key)).toBe(true);
   });
 
   test('update properties and trigger onUpdate listeners correctly', () => {
@@ -71,7 +81,6 @@ describe('createSource', () => {
 
     expect(stateRepo.bool).toBe(false);
     expect(stateRepo[`${FIELDS_PREFIX}data`].bool).toBe(false)
-
     expect(onUpdateMock).toHaveBeenCalledWith("bool");
   });
 });
