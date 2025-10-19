@@ -2,16 +2,16 @@ import {ICallable, Callable, SPECIAL_KEY, FIELDS_PREFIX} from './domain';
 
 const get = (obj, prop) => {
   if (
-    obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY) // Используем .get()
-    && prop !== obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY) // Используем .get()
+    obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY)
+    && prop !== obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY)
     && (typeof prop === 'string' && !prop.startsWith(FIELDS_PREFIX))
     && !obj[`${FIELDS_PREFIX}methods`][prop]
   ) {
     const currentKey = obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY);
-    obj[`${FIELDS_PREFIX}muppet`].set(currentKey, false); // Используем .set()
+    obj[`${FIELDS_PREFIX}muppet`].set(currentKey, false);
     
-    const currentFields = obj[`${FIELDS_PREFIX}criticalFields`].get(currentKey) || []; // Используем .get()
-    obj[`${FIELDS_PREFIX}criticalFields`].set(currentKey, [...new Set([ // Используем .set()
+    const currentFields = obj[`${FIELDS_PREFIX}criticalFields`].get(currentKey) || [];
+    obj[`${FIELDS_PREFIX}criticalFields`].set(currentKey, [...new Set([
       ...currentFields,
       prop
     ])]);
@@ -39,11 +39,10 @@ const set = (obj, prop, value): boolean => {
     };
 
     if (obj[`${FIELDS_PREFIX}listeners`][prop] && obj[`${FIELDS_PREFIX}listeners`][prop].size) {
-      // 'key' здесь - это и есть 'notify' функция
       obj[`${FIELDS_PREFIX}listeners`][prop].forEach((notify, key) => {
-        if (obj[`${FIELDS_PREFIX}muppet`].has(key) // Используем .has()
-            && obj[`${FIELDS_PREFIX}muppet`].get(key) === false) { // Используем .get()
-          obj[`${FIELDS_PREFIX}muppet`].set(key, true); // Используем .set()
+        if (obj[`${FIELDS_PREFIX}muppet`].has(key)
+            && obj[`${FIELDS_PREFIX}muppet`].get(key) === false) {
+          obj[`${FIELDS_PREFIX}muppet`].set(key, true);
         }
 
         notify();
@@ -107,10 +106,8 @@ export const createSource = <
     proxy[`${FIELDS_PREFIX}onUpdate`] = [];
     proxy[`${FIELDS_PREFIX}data`] = data;
     
-    // === ИЗМЕНЕНИЯ ЗДЕСЬ ===
-    proxy[`${FIELDS_PREFIX}criticalFields`] = new Map(); // Было {}
-    proxy[`${FIELDS_PREFIX}muppet`] = new Map(); // Было {}
-    // =======================
+    proxy[`${FIELDS_PREFIX}criticalFields`] = new Map();
+    proxy[`${FIELDS_PREFIX}muppet`] = new Map();
 
     proxy[`${FIELDS_PREFIX}listeners`] = Object.keys(obj).reduce(
       (prev, key) => !key.startsWith(FIELDS_PREFIX) && key !== '__call'
