@@ -11,50 +11,68 @@ export function simpleReactProvider<T extends object>(prop: keyof T): T[keyof T]
     return this[`${FIELDS_PREFIX}data`][prop];
   }
 
-  try { // very dirty trick
-    React.useId()
+  try {
+    React.useId();
   } catch (error) {
     return this[`${FIELDS_PREFIX}data`][prop];
   }
 
   const state = useSync(
     (notify) => {
-      const currentProp = prop;
+      try {
+        const currentProp = prop;
 
-      if (
-        this[`${FIELDS_PREFIX}listeners`][currentProp] &&
-        typeof this[`${FIELDS_PREFIX}listeners`][currentProp] !== 'function'
-      ) {
-        this[`${FIELDS_PREFIX}listeners`][currentProp].set(notify, notify);
-      }
-
-      this[`${FIELDS_PREFIX}criticalFields`].set(notify, [currentProp]);
-
-      this[`${FIELDS_PREFIX}muppet`].set(notify, true);
-
-      return () => {
-        this[`${FIELDS_PREFIX}muppet`].set(notify, false);
-
-        const fields = this[`${FIELDS_PREFIX}criticalFields`].get(notify);
-        if (fields) {
-          fields.forEach(p => {
-            if (
-              this[`${FIELDS_PREFIX}listeners`][p] &&
-              typeof this[`${FIELDS_PREFIX}listeners`][p] !== 'function'
-            ) {
-              this[`${FIELDS_PREFIX}listeners`][p].delete(notify);
-            }
-          });
+        if (
+          this[`${FIELDS_PREFIX}listeners`][currentProp] &&
+          typeof this[`${FIELDS_PREFIX}listeners`][currentProp].set === 'function'
+        ) {
+          this[`${FIELDS_PREFIX}listeners`][currentProp].set(notify, notify);
         }
 
-        this[`${FIELDS_PREFIX}criticalFields`].delete(notify);
-        this[`${FIELDS_PREFIX}muppet`].delete(notify);
+        if (
+          this[`${FIELDS_PREFIX}criticalFields`] &&
+          typeof this[`${FIELDS_PREFIX}criticalFields`].set === 'function'
+        ) {
+          this[`${FIELDS_PREFIX}criticalFields`].set(notify, [currentProp]);
+        }
+        
+        if (
+          this[`${FIELDS_PREFIX}muppet`] &&
+          typeof this[`${FIELDS_PREFIX}muppet`].set === 'function'
+        ) {
+          this[`${FIELDS_PREFIX}muppet`].set(notify, true);
+        }
+      } catch (err) {
+        console.error("Error during subscribe:", err, prop);
+      }
+
+      return () => {
+        try {
+          this[`${FIELDS_PREFIX}muppet`]?.set(notify, false);
+
+          const fields = this[`${FIELDS_PREFIX}criticalFields`]?.get(notify);
+          if (fields) {
+            fields.forEach(p => {
+              this[`${FIELDS_PREFIX}listeners`][p]?.delete(notify);
+            });
+          }
+
+          this[`${FIELDS_PREFIX}criticalFields`]?.delete(notify);
+          this[`${FIELDS_PREFIX}muppet`]?.delete(notify);
+        } catch (err) {
+          console.error("Error during unsubscribe:", err);
+        }
       };
     },
+
     () => {
-      return this[`${FIELDS_PREFIX}data`];
+      try {
+        return this[`${FIELDS_PREFIX}data`];
+      } catch {
+        return undefined;
+      }
     }
   );
 
-  return state[prop];
+  return state ? state[prop] : this[`${FIELDS_PREFIX}data`][prop];
 }
