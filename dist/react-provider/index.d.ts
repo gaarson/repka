@@ -1,1 +1,1 @@
-export declare function simpleReactProvider<T>(prop: keyof T): T;
+export declare function simpleReactProvider<T extends object>(prop: keyof T): T[keyof T];
