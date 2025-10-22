@@ -1,6 +1,6 @@
 import {ICallable, Callable, SPECIAL_KEY, FIELDS_PREFIX} from './domain';
 
-const get = (obj, prop) => {
+function get(obj, prop, receiver) {
   if (
     obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY)
     && prop !== obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY)
@@ -94,7 +94,7 @@ export const createSource = <
       return acc;
     }, callableObj)
 
-    const proxy: T & ICallable<ReturnType<O['main']>, Parameters<O['main']>> = new Proxy(obj, {set, get});
+    const proxy: T & ICallable<ReturnType<O['main']>, Parameters<O['main']>> = new Proxy(obj, {set, get: get.bind(this)});
 
     const methods = [...methodsKeys].reduce(
       (prev, curr) => (curr !== 'constructor' && typeof data[curr] === 'function')

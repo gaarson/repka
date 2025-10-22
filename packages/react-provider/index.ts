@@ -6,14 +6,14 @@ export function simpleReactProvider<T extends object>(prop: keyof T): T[keyof T]
     return this[`${FIELDS_PREFIX}data`][prop];
   }
 
-  const useSync = React.useSyncExternalStore;
-  if (!useSync) {
-    return this[`${FIELDS_PREFIX}data`][prop];
-  }
-
   try {
     React.useId();
   } catch (error) {
+    return this[`${FIELDS_PREFIX}data`][prop];
+  }
+
+  const useSync = React.useSyncExternalStore;
+  if (!useSync) {
     return this[`${FIELDS_PREFIX}data`][prop];
   }
 
@@ -64,12 +64,18 @@ export function simpleReactProvider<T extends object>(prop: keyof T): T[keyof T]
         }
       };
     },
-
     () => {
       try {
         return this[`${FIELDS_PREFIX}data`];
-      } catch {
-        return undefined;
+      } catch(error) {
+        return {};
+      }
+    },
+    () => {
+      try {
+        return this[`${FIELDS_PREFIX}data`];
+      } catch (error) {
+        return {};
       }
     }
   );

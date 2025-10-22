@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../packages/repka/index.ts"],
+  "sourcesContent": ["import { createSource } from 'core';\nimport { simpleReactProvider } from 'react-provider';\n\nexport const repka = <T>(obj: T) => createSource<\n  T, \n  {main: typeof simpleReactProvider, getter: typeof simpleReactProvider}\n>(\n  obj,\n  {main: simpleReactProvider, getter: simpleReactProvider}\n);\n\nexport { watch } from 'watcher';\n"],
+  "mappings": ";;;;;;;;;;;;AAGO,IAAM,QAAQ,CAAI,QAAW;AAAA,EAIlC;AAAA,EACA,EAAC,MAAM,qBAAqB,QAAQ,oBAAmB;AACzD;",
+  "names": []
+}
