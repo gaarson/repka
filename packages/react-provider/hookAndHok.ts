@@ -34,7 +34,7 @@ function isReactComponent(arg: Function): boolean {
 }
 
 export function repkaHookAndHoc(arg?: Function | string) {
-  if (arg && typeof arg !== 'string' && isReactComponent(arg)) {
+  if (arg && typeof arg !== 'string') {
     return createHOCWrapper(this, arg as React.ComponentType);
   }
 
