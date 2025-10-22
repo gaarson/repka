@@ -1,1 +1,1 @@
-export declare function repkaHookAndHoc(arg?: Function | string): any;
+export declare function repkaHookAndHoc(arg: Function | string): any;

@@ -29,17 +29,13 @@ const HOCWrapper: React.FC<any> = (props) => {
   return HOCWrapper;
 }
 
-function isReactComponent(arg: Function): boolean {
-  return typeof arg === 'function' && /^[A-Z]/.test(arg.name);
-}
-
-export function repkaHookAndHoc(arg?: Function | string) {
-  if (arg && typeof arg !== 'string') {
-    return createHOCWrapper(this, arg as React.ComponentType);
-  }
-
+export function repkaHookAndHoc(arg: Function | string) {
   try {
-    return simpleHook(this, typeof arg);
+    if (typeof arg !== 'string')  return createHOCWrapper(this, arg as React.ComponentType); 
+    else if (typeof arg === 'string') return simpleHook(this, arg);
+    else console.error(
+      '[Repka] Ошибка вызова хука. Нужно указать либо функциональный компонент либо имя поля за которым хотите следить'
+    );
   } catch (e) {
     console.error('[Repka] Ошибка вызова хука. Убедитесь, что state() вызывается на верхнем уровне компонента.', e);
     return this;

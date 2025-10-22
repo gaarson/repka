@@ -32,7 +32,21 @@ const Button = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-export default state(function Home() {
+const MagicButton = state(() => {
+  // Этот компонент НЕ обернут в HOC
+  // и у него нет родителя с HOC.
+  const [cond, setCond] = useState(true);
+
+  return (
+    <div>
+      <button onClick={() => setCond(c => !c)}>Toggle Magic</button>
+      {/* А вот и условный вызов */}
+      {cond && <p>Magic Foo: {state.foo}</p>} 
+    </div>
+  )
+})
+
+const Home = state(() => {
   const [condition, setCondition] = useState(true);
   
   const [one, setOne] = useState(1);
@@ -71,3 +85,12 @@ export default state(function Home() {
     </div>
   );
 })
+
+export default function App () {
+  return (
+    <div>
+      <Home />
+      <MagicButton />
+    </div>
+  )
+}
