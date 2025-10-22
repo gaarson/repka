@@ -38,6 +38,8 @@ const state = repka<{
   } 
 });
 
+state.toDo()
+
 const Button = (
   { onClick }: { onClick: () => void }
 ) => {
@@ -70,7 +72,10 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <Button onClick={() => state.toDo()} />
+        <Button onClick={() => {
+          console.log('BUTTON CLICK');
+          state.toDo() 
+        }} />
 
         <button onClick={() => state.puk = 'POO'}>
           change puk {state.bar}

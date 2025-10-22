@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../packages/core/domain.ts"],
-  "sourcesContent": ["export type providerType<DataType = undefined, MethodsObjType = undefined> = () => \n  (MethodsObjType extends object ? [DataType, MethodsObjType] : DataType);\n\nexport const SPECIAL_KEY = '__PROVIDER_ID__';\nexport const FIELDS_PREFIX = '__REPO__'\n\nexport interface ICallable<T, P extends unknown[]> {\n  (...args: P): T;\n  __call(...args: P): T;\n}\n\nexport interface ICallableConstructor {\n  new <T, P extends unknown[]>(implementation: (...args: P) => T): ICallable<T, P>;\n  prototype: any;\n}\n\nfunction CallableImplementation(this: any, implementation: (...args: any[]) => any) {\n  const callable = (...args: any[]) => {\n    return callable.__call(...args);\n  };\n  callable.__call = implementation;\n  Object.setPrototypeOf(callable, new.target.prototype);\n  return callable;\n}\n\nexport const Callable = CallableImplementation as unknown as ICallableConstructor;\n\n"],
-  "mappings": ";AAGO,IAAM,cAAc;AACpB,IAAM,gBAAgB;AAY7B,SAAS,uBAAkC,gBAAyC;AAClF,QAAM,WAAW,IAAI,SAAgB;AACnC,WAAO,SAAS,OAAO,GAAG,IAAI;AAAA,EAChC;AACA,WAAS,SAAS;AAClB,SAAO,eAAe,UAAU,WAAW,SAAS;AACpD,SAAO;AACT;AAEO,IAAM,WAAW;",
-  "names": []
-}
