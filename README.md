@@ -1,3 +1,10 @@
+<p align="center">
+  <img 
+    src="https://raw.githubusercontent.com/gaarson/repka/refs/heads/master/.github/assets/logo.png" 
+    alt="logo Repka" 
+    width="350">
+</p>
+
 # Repka
 
 **Repka** is a simple yet powerful state manager for React. It leverages plain JavaScript classes as stores, providing high performance with **selective re-renders** right out of the box.
