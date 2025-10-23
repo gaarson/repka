@@ -138,17 +138,14 @@ This method subscribes your component to *all* properties it accesses during its
 ```jsx
 import { simpleStore } from './store';
 
-const MyComponent = ({ shouldShow }) => {
+export const MyComponent = simpleStore(({ shouldShow }) => {
   // ✅ SAFE: We can now use conditional logic
   let value = 'default';
   if (shouldShow) {
     value = simpleStore.foo; 
   }
   return <div>{value}</div>
-}
-
-// Wrap the component with the store
-export default simpleStore(MyComponent);
+})
 ```
 
 **Recommendation:**
