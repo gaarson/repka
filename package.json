@@ -1,12 +1,12 @@
 {
-  "name": "@ruser/repka",
+  "name": "repka",
   "version": "0.1.0",
   "description": "A simple and powerful state manager for React with selective re-renders",
   "author": "ruser",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruser/repka"
+    "url": "git+https://github.com/gaarson/repka.git"
   },
   "keywords": [
     "react",
