@@ -1,14 +1,64 @@
 {
-  "name": "repka",
+  "name": "@ruser/repka",
   "version": "0.1.0",
-  "description": "",
+  "description": "A simple and powerful state manager for React with selective re-renders",
+  "author": "ruser",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruser/repka"
+  },
+  "keywords": [
+    "react",
+    "state",
+    "state-management",
+    "repka",
+    "reactive",
+    "proxy"
+  ],
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
   "main": "dist/repka/index.js",
+  "types": "dist/repka/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/repka/index.js",
+      "require": "./dist/repka/index.js",
+      "types": "./dist/repka/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core/index.js",
+      "require": "./dist/core/index.js",
+      "types": "./dist/core/index.d.ts"
+    },
+    "./legacy": {
+      "import": "./dist/legacy/index.js",
+      "require": "./dist/legacy/index.js",
+      "types": "./dist/legacy/index.d.ts"
+    },
+    "./reaction": {
+      "import": "./dist/reaction/index.js",
+      "require": "./dist/reaction/index.js",
+      "types": "./dist/reaction/index.d.ts"
+    },
+    "./react-provider": {
+      "import": "./dist/react-provider/index.js",
+      "require": "./dist/react-provider/index.js",
+      "types": "./dist/react-provider/index.d.ts"
+    },
+    "./watcher": {
+      "import": "./dist/watcher/index.js",
+      "require": "./dist/watcher/index.js",
+      "types": "./dist/watcher/index.d.ts"
+    }
+  },
   "scripts": {
     "test": "our-scripts test -p packages",
     "build": "our-scripts build -p packages -em -dts",
     "watch": "our-scripts start -p packages -em -dts"
   },
-  "author": "ruser",
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
