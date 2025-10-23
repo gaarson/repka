@@ -90,12 +90,11 @@ export function simpleReactProvider<T extends object>(prop: keyof T): T[keyof T]
       isInReactRender = true;
     }
   } else if (React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentDispatcher?.current) {
-      isInReactRender = true;
+    isInReactRender = true;
   }
 
-  if (!isInReactRender) {
-    return this[`${FIELDS_PREFIX}data`][prop];
-  }
+  if (!isInReactRender) return this[`${FIELDS_PREFIX}data`][prop];
+
 
   const currentReaction = REACTION_STACK[REACTION_STACK.length - 1];
   if (currentReaction) {
@@ -104,10 +103,9 @@ export function simpleReactProvider<T extends object>(prop: keyof T): T[keyof T]
   }
   
   try {
-    React.useId();
-  } catch (error) {
+    return simpleHook<T>(this, prop)
+  } catch {
     return this[`${FIELDS_PREFIX}data`][prop];
   }
 
-  return simpleHook<T>(this, prop)
 }

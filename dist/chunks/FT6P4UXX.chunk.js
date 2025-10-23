@@ -1,0 +1,1 @@
+import{b as n}from"./O3VCMV5J.chunk.js";var r=(t,a)=>{let e=t[`${n}onUpdate`]?.length||0;return new Promise(i=>{t[`${n}onUpdate`]&&(t[`${n}onUpdate`]=[...t[`${n}onUpdate`],(o,p)=>{a===o&&(i(p),t[`${n}onUpdate`][e]=null,t[`${n}onUpdate`].every(d=>d===null)&&(t[`${n}onUpdate`]=[]))}])})};export{r as a};

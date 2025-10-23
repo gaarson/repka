@@ -2,7 +2,7 @@ import { FIELDS_PREFIX } from "core/domain";
 import { REACTION_STACK } from "reaction";
 
 type Store = {
-  [`__REPO__onUpdate`]: ((prop: string) => void)[];
+  [`__REPO__onUpdate`]: ((prop: string, value: unknown) => void)[];
 };
 
 export class Reaction {
@@ -17,8 +17,11 @@ export class Reaction {
   }
 
   track<T>(fn: () => T): T {
-    console.log('TRACL', this.name, this.isDisposed)
     if (this.isDisposed) return fn();
+
+    for (const props of this.dependencies.values()) {
+      props.clear();
+    }
 
     REACTION_STACK.push(this);
     try {
@@ -41,8 +44,7 @@ export class Reaction {
     deps.add(prop);
   }
 
-  private onUpdate = (updatedProp: string) => {
-    console.log('ON UPDATE', this.dependencies.entries())
+  private onUpdate = (updatedProp: string, value: unknown) => {
     for (const [,props] of this.dependencies.entries()) {
       if (props.has(updatedProp)) {
         this.scheduler();

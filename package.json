@@ -14,12 +14,13 @@
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "our-scripts": "github:gaarson/mycra#tests-update-rework",
-    "react-test-renderer": "^18.3.1",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.0.1",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.11.24"
+    "@types/node": "^20.11.24",
+    "our-scripts": "github:gaarson/mycra#tests-update-rework",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-test-renderer": "^18.3.1"
   }
 }

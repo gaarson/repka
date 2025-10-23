@@ -49,7 +49,9 @@ const set = (obj, prop, value): boolean => {
       });
     }
     if (obj[`${FIELDS_PREFIX}onUpdate`].length) {
-      obj[`${FIELDS_PREFIX}onUpdate`].forEach((fn: (...args: unknown[]) => void) => fn && fn(prop));
+      obj[`${FIELDS_PREFIX}onUpdate`].forEach(
+        (fn: (...args: any[]) => void) => fn && fn(prop, value)
+      );
     }
   }
 

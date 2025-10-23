@@ -57,6 +57,28 @@ const watchFor = async () => {
 
 watchFor();
 
+const Card = () => {
+  return (
+    <div className="card">
+      <Button onClick={() => {
+        console.log('BUTTON CLICK');
+        state.toDo() 
+      }} />
+
+      <button onClick={() => state.puk = 'POO'}>
+        change puk {state.bar}
+      </button>
+
+      <button onClick={() => state.bar = 'change'}>
+        another count is {state.bar}
+      </button>
+      <p>
+        Edit <code>src/App.tsx</code> and save to test HMR
+      </p>
+    </div>
+  )
+}
+
 function App() {
   const { puk } = state;
 
@@ -71,27 +93,12 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
-      <div className="card">
-        <Button onClick={() => {
-          console.log('BUTTON CLICK');
-          state.toDo() 
-        }} />
-
-        <button onClick={() => state.puk = 'POO'}>
-          change puk {state.bar}
-        </button>
-
-        <button onClick={() => state.bar = 'change'}>
-          another count is {state.bar}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
         {puk}
       </p>
+
+      <Card />
 
       <div className="card">
         <button onClick={() => state.toDoWithObj()}>

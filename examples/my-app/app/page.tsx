@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react';
-
+import { useRef, useState } from 'react';
 import { repka } from "repka";
 
 class State {
@@ -33,14 +32,11 @@ const Button = ({ onClick }: { onClick: () => void }) => {
 };
 
 const MagicButton = state(() => {
-  // Этот компонент НЕ обернут в HOC
-  // и у него нет родителя с HOC.
   const [cond, setCond] = useState(true);
 
   return (
     <div>
       <button onClick={() => setCond(c => !c)}>Toggle Magic</button>
-      {/* А вот и условный вызов */}
       {cond && <p>Magic Foo: {state.foo}</p>} 
     </div>
   )
@@ -68,7 +64,10 @@ const Home = state(() => {
       
       <h3>{some}</h3>
       <button 
-        onClick={() => setCondition(c => !c)} 
+        onClick={() => {
+          state.foo += 1;
+          setCondition(c => !c) 
+        }} 
         style={{ color: 'red', margin: '10px' }}
       >
         Click me to BREAK React (condition: {String(condition)})
