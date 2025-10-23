@@ -27,7 +27,7 @@ describe('Reaction class', () => {
 
   test('should NOT run scheduler when an unrelated prop is updated', () => {
     reaction.reportDependency(mockStore, 'foo');
-    mockStore.simulateUpdate('bar'); // Обновляем 'bar', а не 'foo'
+    mockStore.simulateUpdate('bar'); 
     expect(scheduler).not.toHaveBeenCalled();
   });
 

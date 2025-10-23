@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { render, act, fireEvent, screen, queryByText } from '@testing-library/react';
+import { render, act, fireEvent, screen } from '@testing-library/react';
 import { FIELDS_PREFIX } from '../../core/domain';
 import { repka } from '../../repka';
 
@@ -50,7 +50,7 @@ describe('repka HOC (state(Component))', () => {
 
     const MyComponent = state(() => {
       renderSpy();
-      const { puk } = state; // Деструктуризация
+      const { puk } = state; 
       return <div>{puk}</div>;
     });
 
@@ -80,7 +80,6 @@ describe('repka HOC (state(Component))', () => {
 
     unmount();
     
-    // Reaction.dispose() должен был отписаться
     expect(state[`${FIELDS_PREFIX}onUpdate`].length).toBe(0);
   });
 });
@@ -141,9 +140,9 @@ describe('Integration Tests & Shortcomings', () => {
       return (
         <div>
           <button onClick={() => setShow(true)}>Show Foo</button>
-          {/* state.foo читается только если show === true */}
+
           {show && <p>Foo: {state.foo}</p>}
-          {/* state.bar читается всегда */}
+
           <p>Bar: {state.bar}</p>
         </div>
       );
@@ -153,15 +152,11 @@ describe('Integration Tests & Shortcomings', () => {
     expect(renderSpy).toHaveBeenCalledTimes(1);
     expect(screen.queryByText('Foo: 0')).not.toBeInTheDocument();
 
-    // Меняем 'foo'. Компонент НЕ должен ре-рендериться,
-    // так как 'foo' не был прочитан.
     act(() => {
       state.foo = 1;
     });
     expect(renderSpy).toHaveBeenCalledTimes(1);
 
-    // Меняем 'bar'. Компонент ДОЛЖЕН ре-рендериться,
-    // так как 'bar' был прочитан.
     act(() => {
       state.bar = 11;
     });
@@ -187,31 +182,24 @@ describe('Integration Tests & Shortcomings', () => {
     render(<MyComponent />);
     expect(renderSpy).toHaveBeenCalledTimes(1);
 
-    // Включаем 'foo'
     act(() => {
       fireEvent.click(screen.getByText('Toggle'));
     });
     expect(renderSpy).toHaveBeenCalledTimes(2);
     expect(screen.getByText('Foo: 0')).toBeInTheDocument();
 
-    // Теперь 'foo' прочитан и стал зависимостью.
-    // Меняем 'foo', компонент ДОЛЖЕН ре-рендериться.
     act(() => {
       state.foo = 1;
     });
     expect(renderSpy).toHaveBeenCalledTimes(3);
     expect(screen.getByText('Foo: 1')).toBeInTheDocument();
 
-    // Снова прячем 'foo'
     act(() => {
       fireEvent.click(screen.getByText('Toggle'));
     });
     expect(renderSpy).toHaveBeenCalledTimes(4);
     expect(screen.queryByText('Foo: 1')).not.toBeInTheDocument();
 
-    // Меняем 'foo', пока он спрятан.
-    // 'Reaction' умный и должен был очистить зависимости.
-    // Ре-рендера НЕ должно быть.
     act(() => {
       state.foo = 2;
     });
@@ -230,22 +218,20 @@ describe('Integration Tests & Shortcomings', () => {
     render(<MyComponent />);
     expect(renderSpy).toHaveBeenCalledTimes(1);
 
-    // Прямая мутация вложенного свойства
     act(() => {
       state.obj.foo = 'b';
     });
 
-    // Proxy НЕ перехватит этот 'set'. Ре-рендера не будет.
     expect(renderSpy).toHaveBeenCalledTimes(1);
-    expect(screen.getByText('a')).toBeInTheDocument(); // Останется старое значение
+    expect(screen.getByText('a')).toBeInTheDocument(); 
   });
 
   test('Mixed Usage: should not cause double subscription or errors', () => {
     const state = repka({ foo: 0, bar: 'a' });
     const renderSpy = jest.fn();
 
-    const MyComponent = state(() => { // HOC
-      const bar = state('bar'); // Hook
+    const MyComponent = state(() => {
+      const bar = state('bar');
       renderSpy();
       return <div>Foo: {state.foo}, Bar: {bar}</div>;
     });
@@ -253,17 +239,12 @@ describe('Integration Tests & Shortcomings', () => {
     render(<MyComponent />);
     expect(renderSpy).toHaveBeenCalledTimes(1);
 
-    // HOC (reaction) отследит 'foo'
-    // Hook (useSyncExternalStore) отследит 'bar'
-    
-    // Обновляем 'foo'
     act(() => {
       state.foo = 1;
     });
     expect(renderSpy).toHaveBeenCalledTimes(2);
     expect(screen.getByText('Foo: 1, Bar: a')).toBeInTheDocument();
     
-    // Обновляем 'bar'
     act(() => {
       state.bar = 'b';
     });
