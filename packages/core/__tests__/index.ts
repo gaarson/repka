@@ -81,6 +81,6 @@ describe('createSource', () => {
 
     expect(stateRepo.bool).toBe(false);
     expect(stateRepo[`${FIELDS_PREFIX}data`].bool).toBe(false)
-    expect(onUpdateMock).toHaveBeenCalledWith("bool");
+    expect(onUpdateMock).toHaveBeenCalledWith("bool", false);
   });
 });

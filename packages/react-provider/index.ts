@@ -2,8 +2,6 @@ import React from 'react';
 import { FIELDS_PREFIX } from 'core/domain';
 import { REACTION_STACK } from 'reaction';
 
-let hasWarned = false;
-
 export const simpleHook = <T extends object>(context: any, prop: keyof T): T[keyof T] => {
   const useSync = React.useSyncExternalStore;
   if (!useSync) {
@@ -79,23 +77,15 @@ export const simpleHook = <T extends object>(context: any, prop: keyof T): T[key
 export function simpleReactProvider<T extends object>(prop: keyof T): T[keyof T] {
   let isInReactRender = false;
 
-  if (!hasWarned) {
-    console.warn(`[Repka] ВНИМАНИЕ: Обнаружен прямой доступ к 'state.${String(prop)}' в рендере...`);
-
-    hasWarned = true;
-  }
-
   if (React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE) {
     if (React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?.H !== null) {
       isInReactRender = true;
     }
-  } else if (React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentDispatcher?.current) {
-      isInReactRender = true;
+  } else if (React?.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentDispatcher?.current) {
+    isInReactRender = true;
   }
 
-  if (!isInReactRender) {
-    return this[`${FIELDS_PREFIX}data`][prop];
-  }
+  if (!isInReactRender) return this[`${FIELDS_PREFIX}data`][prop];
 
   const currentReaction = REACTION_STACK[REACTION_STACK.length - 1];
   if (currentReaction) {
@@ -104,10 +94,8 @@ export function simpleReactProvider<T extends object>(prop: keyof T): T[keyof T]
   }
   
   try {
-    React.useId();
-  } catch (error) {
+    return simpleHook<T>(this, prop)
+  } catch {
     return this[`${FIELDS_PREFIX}data`][prop];
   }
-
-  return simpleHook<T>(this, prop)
 }

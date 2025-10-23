@@ -1,26 +1,49 @@
 import { repka } from '../../repka';
 import { watch } from '../index';
+import { FIELDS_PREFIX } from '../../core/domain'
 
-describe('create watcher', () => {
-  const watcherSpy = jest.fn();
-  const state = repka<{foo: number}>({ foo: 1 });
+import { act } from '@testing-library/react';
 
-  const watchForFoo = async () => {
-    await watch(state, 'foo');
-    watcherSpy()
-  }
+describe('watch function', () => {
+  test('should resolve with the new value when property changes', async () => {
+    const state = repka({ foo: 0 });
+    const watcherSpy = jest.fn();
 
-  beforeEach(() => {
-    watcherSpy.mockClear();
+    const watchPromise = watch(state, 'foo').then(watcherSpy);
+
+    expect(watcherSpy).not.toHaveBeenCalled();
+
+    act(() => {
+      state.foo = 1;
+    });
+
+    await watchPromise;
+
+    expect(watcherSpy).toHaveBeenCalledWith(1);
   });
 
-  test('spy called after foo updates', () => { 
-    watchForFoo();
+  test('should only resolve once and clean up its listener', async () => {
+    const state = repka({ foo: 0 });
+    const watcherSpy = jest.fn();
 
-    state.foo = 2
+    const watchPromise = watch(state, 'foo').then(watcherSpy);
 
-    setTimeout(() => {
-      expect(watcherSpy).toHaveBeenCalledTimes(1);
-    }, 0)
+    expect(state[`${FIELDS_PREFIX}onUpdate`].length).toBe(1);
+
+    act(() => {
+      state.foo = 1;
+    });
+    await watchPromise;
+    expect(watcherSpy).toHaveBeenCalledTimes(1);
+
+    expect(state[`${FIELDS_PREFIX}onUpdate`].length).toBe(0);
+
+    act(() => {
+      state.foo = 2;
+    });
+    
+    await act(async () => {}); 
+    
+    expect(watcherSpy).toHaveBeenCalledTimes(1);
   });
 });

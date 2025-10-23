@@ -7,9 +7,9 @@ export const watch = <T = any>(sourceObj: T, propertyName: string): Promise<T> =
     if (sourceObj[`${FIELDS_PREFIX}onUpdate`]) {
       sourceObj[`${FIELDS_PREFIX}onUpdate`] = [
         ...sourceObj[`${FIELDS_PREFIX}onUpdate`], 
-        (updatedProperty: string) => {
+        (updatedProperty: string, value: unknown) => {
           if (propertyName === updatedProperty) {
-            resolve(sourceObj[propertyName]);
+            resolve(value as T); 
             sourceObj[`${FIELDS_PREFIX}onUpdate`][index] = null;
 
             if (sourceObj[`${FIELDS_PREFIX}onUpdate`].every((i) => i ===  null))

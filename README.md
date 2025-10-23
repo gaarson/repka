@@ -1,192 +1,252 @@
-**Repka** — это простой, но мощный менеджер состояний для React. Он позволяет управлять состоянием приложения с помощью обычных JavaScript-классов, обеспечивая при этом высокую производительность за счет **селективных ререндеров**.
+# Repka
 
-Забудьте о селекторах и сложных хуках. С Repka вы работаете с состоянием так, как будто это обычный объект, а библиотека сама заботится о том, чтобы ваши компоненты обновлялись эффективно.
+**Repka** is a simple yet powerful state manager for React. It leverages plain JavaScript classes as stores, providing high performance with **selective re-renders** right out of the box.
 
-## ✨ Ключевые особенности
+Forget about selectors and complex boilerplate. With Repka, you interact with your state as if it were a plain object, and the library ensures your components update efficiently.
 
-  * **Классы как хранилище**: Определяйте состояние и логику для его изменения в одном месте.
-  * **Прямые мутации**: Изменяйте состояние простым присваиванием (`store.myValue = 'новое значение'`). Никаких редьюсеров или сеттеров.
-  * **Высокая производительность**: Компоненты перерисовываются только тогда, когда изменяются именно те данные, которые они используют.
-  * **Нулевая конфигурация**: Просто создайте экземпляр вашего класса и начните использовать его в компонентах.
-  * **Автоматическая отписка**: Библиотека сама очищает слушателей, когда компонент размонтируется, предотвращая утечки памяти.
+## ✨ Key Features
+
+  * **Class-based Stores**: Define your state and the logic to change it all in one place.
+  * **Direct Mutations**: Modify state with simple assignments (`store.myValue = 'new value'`). No reducers or setters are needed.
+  * **High Performance**: Components re-render *only* when the specific data they use changes.
+  * **Zero-Config**: Just create an instance of your class with `repka` and start using it.
+  * **Automatic Cleanup**: Subscriptions are automatically cleaned up when components unmount, preventing memory leaks.
+
+## 💾 Installation
+
+```bash
+
+# npm
+npm install https://github.com/gaarson/repka
+```
 
 -----
 
-## 🚀 Начало работы
+## 🚀 Getting Started
 
-### 1\. Определите ваше хранилище (Source)
+### 1\. Define Your Store
 
-Создайте обычный JavaScript-класс, который будет содержать ваши данные (свойства) и методы для их изменения.
+Create a plain JavaScript class that holds your state (properties) and mutation logic (methods).
+Use the main `repka` function to create a reactive instance of your store.
 
 ```typescript
 // store.ts
 
-// Описываем интерфейс для нашего состояния и методов
+import { repka } from 'repka';
+
+// 1. (Optional) Define an interface for your store
 interface ISimpleStore {
   str: string;
   num: number;
   reset(): void;
 }
 
-// Создаем класс, реализующий этот интерфейс
+// 2. Create a class implementing that interface
 class SimpleStore implements ISimpleStore {
-  str = 'начальная строка';
+  str = 'initial string';
   num = 123;
 
   reset() {
-    this.str = 'начальная строка';
+    this.str = 'initial string';
     this.num = 123;
   }
 }
-```
 
-### 2\. Создайте экземпляр хранилища
-
-Используйте главную функцию `repka` для создания реактивного экземпляра вашего хранилища.
-
-```typescript
-// store.ts
-import { repka } from 'repka';
-
-// ...определение класса SimpleStore
-
-// Создаем и экспортируем наш store
+// 3. Create and export your reactive store
 export const simpleStore = repka<ISimpleStore>(new SimpleStore());
 ```
 
-### 3\. Используйте в React-компоненте
+### 2\. Use in Your React Component
 
-Теперь просто импортируйте ваш `simpleStore` и используйте его свойства и методы напрямую в компонентах.
+You can now import `simpleStore` and use it in your components. There are two primary ways to make your component "listen" to changes.
 
 ```jsx
 // MyComponent.jsx
 import React from 'react';
 import { simpleStore } from './store';
 
+// See the "Usage in React" section for more on this.
 const MyComponent = () => {
   return (
     <div>
-      {/* 1. Чтение данных из store */}
-      <p>Строка: {simpleStore.str}</p>
-      <p>Число: {simpleStore.num}</p>
+      {/* 1. Read data from the store */}
+      <p>String: {simpleStore.str}</p>
+      <p>Number: {simpleStore.num}</p>
       
-      {/* 2. Изменение данных через прямое присваивание */}
-      <button onClick={() => simpleStore.str = 'новая строка!'}>
-        Изменить строку
+      {/* 2. Change data via direct assignment */}
+      <button onClick={() => simpleStore.str = 'new string!'}>
+        Change String
       </button>
 
-      {/* 3. Вызов метода из store */}
+      {/* 3. Call a method from the store */}
       <button onClick={() => simpleStore.reset()}>
-        Сбросить
+        Reset
       </button>
     </div>
   );
 };
 ```
 
-Когда вы измените свойство `simpleStore.str`, компонент `MyComponent` автоматически перерисуется, чтобы отобразить новое значение.
+-----
+
+## 📖 Usage in React: The Two Methods
+
+Repka provides two ways to consume state. Choosing the right one is critical for a stable application.
+
+### Method 1: Direct Property Access (The "Easy" Way)
+
+You can access properties like `simpleStore.foo` directly inside your component's render body.
+
+**Under the hood, `simpleStore.foo` acts like a React Hook** (`useSyncExternalStore`).
+
+```jsx
+const StringDisplay = () => {
+  // This access subscribes the component to 'str'
+  return <p>String: {simpleStore.str}</p>;
+};
+```
+
+> ### ⛔ CRITICAL WARNING: Respect the Rules of Hooks
+>
+> Because direct access (`store.prop`) **is a hook call**, you **MUST** follow the **[Rules of Hooks](https://www.google.com/search?q=https://react.dev/warnings/invalid-hook-call)**.
+>
+> **NEVER** access store properties conditionally, in loops, or in event handlers (if you expect reactivity).
+>
+> #### ❌ **This will BREAK your app:**
+>
+> ```jsx
+> const MyComponent = ({ shouldShow }) => {
+>   let value = 'default';
+>   if (shouldShow) {
+>     // 🚨 WRONG! Calling a hook (store.foo) conditionally.
+>     value = simpleStore.foo; 
+>   }
+>   return <div>{value}</div>
+> }
+> ```
+>
+> This will cause an "Invalid hook call" error, as you are changing the order of hook calls between renders.
 
 -----
 
-## ⚡ Производительность: магия селективных ререндеров
+### Method 2: The HOC Wrapper (The "Safe" Way)
 
-Главное преимущество Repka — это **производительность**. Библиотека отслеживает, какое свойство используется в каком компоненте.
+To safely use state within complex components with conditional logic, wrap your component with the store instance itself. The store acts as a Higher-Order Component (HOC).
 
-Если вы измените свойство `store.num`, перерисуются **только те компоненты, которые используют `store.num`**. Компоненты, которые используют только `store.str`, не будут затронуты.
-
-Это позволяет избежать лишних ререндеров и делает ваше приложение быстрым по умолчанию.
-
-### Пример
+This method subscribes your component to *all* properties it accesses during its render, using a single, stable subscription that **does not** violate the Rules of Hooks.
 
 ```jsx
 import { simpleStore } from './store';
 
-// Этот компонент зависит ТОЛЬКО от `simpleStore.str`
+export const MyComponent = simpleStore(({ shouldShow }) => {
+  // ✅ SAFE: We can now use conditional logic
+  let value = 'default';
+  if (shouldShow) {
+    value = simpleStore.foo; 
+  }
+  return <div>{value}</div>
+})
+```
+
+**Recommendation:**
+
+  * **Direct Access (`store.foo`):** Use for simple components where properties are *always* accessed unconditionally at the top level.
+  * **HOC Wrapper (`store(Component)`):** Use for *any* component that has conditional logic (`if`, `&&`, `? :`) that might change which store properties are accessed.
+
+-----
+
+## ⚡ Performance: Selective Re-renders
+
+Repka's performance magic is that it tracks *which* property is used by *which* component.
+
+If you change `store.num`, **only the components that use `store.num`** will re-render. Components that only use `store.str` will be skipped.
+
+### Example
+
+```jsx
+import { simpleStore } from './store';
+
+// This component ONLY depends on `simpleStore.str`
 const StringDisplay = () => {
-  console.log('Рендер StringDisplay');
-  return <p>Строка: {simpleStore.str}</p>;
+  console.log('Render StringDisplay');
+  return <p>String: {simpleStore.str}</p>;
 };
 
-// Этот компонент зависит ТОЛЬКО от `simpleStore.num`
+// This component ONLY depends on `simpleStore.num`
 const NumberDisplay = () => {
-  console.log('Рендер NumberDisplay');
-  return <p>Число: {simpleStore.num}</p>;
+  console.log('Render NumberDisplay');
+  return <p>Number: {simpleStore.num}</p>;
 };
 
 const App = () => (
   <>
     <StringDisplay />
     <NumberDisplay />
-    <button onClick={() => simpleStore.str = 'новое значение'}>
-      Изменить только строку
+    <button onClick={() => simpleStore.str = 'new value'}>
+      Change Only String
     </button>
   </>
 );
 ```
 
-При нажатии на кнопку в консоли вы увидите **только** `"Рендер StringDisplay"`. Компонент `NumberDisplay` не будет перерисован, так как его данные не изменились.
+When you click the button, you will **only** see `"Render StringDisplay"` in the console. `NumberDisplay` will not re-render because its data did not change.
 
 -----
 
-## 🧐 Реактивность вне React: функция `watch`
+## 🧐 Reactivity Outside React: `watch` Example
 
-Иногда нужно отреагировать на изменение состояния за пределами React-компонента — например, для логирования, отправки данных на сервер или выполнения сложной асинхронной логики. Для этого существует функция `watch`.
-
-`watch` — это асинхронная функция, которая возвращает `Promise`. Этот `Promise` разрешится, когда указанное свойство хранилища изменится, и вернет его новое значение.
-
-### API `watch(store, propertyKey)`
-
-  * `store`: Реактивный объект, созданный с помощью `repka`.
-  * `propertyKey`: Имя свойства (строка), за которым нужно следить.
-
-### Пример использования
-
-Можно создать рекурсивную функцию для постоянного отслеживания изменений.
+You can create a recursive function to "listen" for all future changes to a property.
 
 ```javascript
 import { repka, watch } from 'repka';
 
 const state = repka({ foo: 0 });
 
-// Функция, которая будет вечно ждать и логировать изменения 'foo'
+// A function to perpetually watch and log 'foo' changes
 const watchForFooChanges = async () => {
-  console.log('Жду следующего изменения "foo"...');
+  console.log('Waiting for "foo" to change...');
   const updatedValue = await watch(state, 'foo');
-  console.log(`Свойство "foo" изменилось! Новое значение: ${updatedValue}`);
+  console.log(`"foo" changed! New value: ${updatedValue}`);
   
-  // Запускаем ожидание снова
+  // Call itself to wait for the next change
   watchForFooChanges();
 }
 
-// Запускаем "наблюдателя"
+// Start the watcher
 watchForFooChanges();
 
-// Где-то в приложении пользователь нажимает кнопку
+// Sometime later, your app changes the state
 setInterval(() => {
   state.foo += 1;
 }, 2000);
 
 /*
-Вывод в консоли:
-Жду следующего изменения "foo"...
-Свойство "foo" изменилось! Новое значение: 1
-Жду следующего изменения "foo"...
-Свойство "foo" изменилось! Новое значение: 2
-Жду следующего изменения "foo"...
+Console Output:
+Waiting for "foo" to change...
+"foo" changed! New value: 1
+Waiting for "foo" to change...
+"foo" changed! New value: 2
+Waiting for "foo" to change...
 ...
 */
 ```
 
-Эта возможность делает Repka гибким инструментом не только для UI, но и для управления логикой всего приложения.
+-----
 
-## 📖 API
+## 📚 API Reference
 
-### `createSource<T, P>(sourceObject, providers)`
+### `repka<T>(sourceObject: T)`
 
-Основная функция для создания реактивного хранилища.
+The main function to create a reactive store.
 
-  * `sourceObject`: Экземпляр вашего класса (`new MyStore()`).
-  * `providers`: Объект, который связывает ядро Repka с фреймворком (например, React). Для React используется `simpleReactProvider`.
+  * `sourceObject`: An instance of your store class (e.g., `new MyStore()`).
+  * **Returns**: A reactive proxy of your object that can be used in React and acts as a HOC.
 
-Возвращает реактивный прокси-объект, который можно использовать в компонентах.
+### `watch(store, propertyKey)`
+
+An async function to react to state changes *outside* of a React component (e.g., for logging, analytics, or async logic).
+
+  * `store`: The reactive store instance created by `repka`.
+  * `propertyKey`: The string name of the property to watch.
+  * **Returns**: A `Promise` that resolves with the **new value** as soon as the specified property changes.
 
