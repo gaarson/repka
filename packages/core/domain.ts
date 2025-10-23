@@ -1,8 +1,8 @@
 export type providerType<DataType = undefined, MethodsObjType = undefined> = () => 
   (MethodsObjType extends object ? [DataType, MethodsObjType] : DataType);
 
-export const SPECIAL_KEY = '__PROVIDER_ID__';
-export const FIELDS_PREFIX = '__REPO__'
+export const SPECIAL_KEY = '__PROVIDER_ID__' as const;
+export const FIELDS_PREFIX = '__REPO__' as const;
 
 export interface ICallable<T, P extends unknown[]> {
   (...args: P): T;
