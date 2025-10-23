@@ -18,6 +18,7 @@ Forget about selectors and complex boilerplate. With Repka, you interact with yo
 
 # npm
 npm install https://github.com/gaarson/repka
+```
 
 -----
 
