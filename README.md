@@ -193,25 +193,6 @@ When you click the button, you will **only** see `"Render StringDisplay"` in the
 
 -----
 
-## 📚 API Reference
-
-### `repka<T>(sourceObject: T)`
-
-The main function to create a reactive store.
-
-  * `sourceObject`: An instance of your store class (e.g., `new MyStore()`).
-  * **Returns**: A reactive proxy of your object that can be used in React and acts as a HOC.
-
-### `watch(store, propertyKey)`
-
-An async function to react to state changes *outside* of a React component (e.g., for logging, analytics, or async logic).
-
-  * `store`: The reactive store instance created by `repka`.
-  * `propertyKey`: The string name of the property to watch.
-  * **Returns**: A `Promise` that resolves with the **new value** as soon as the specified property changes.
-
------
-
 ## 🧐 Reactivity Outside React: `watch` Example
 
 You can create a recursive function to "listen" for all future changes to a property.
@@ -249,3 +230,23 @@ Waiting for "foo" to change...
 ...
 */
 ```
+
+-----
+
+## 📚 API Reference
+
+### `repka<T>(sourceObject: T)`
+
+The main function to create a reactive store.
+
+  * `sourceObject`: An instance of your store class (e.g., `new MyStore()`).
+  * **Returns**: A reactive proxy of your object that can be used in React and acts as a HOC.
+
+### `watch(store, propertyKey)`
+
+An async function to react to state changes *outside* of a React component (e.g., for logging, analytics, or async logic).
+
+  * `store`: The reactive store instance created by `repka`.
+  * `propertyKey`: The string name of the property to watch.
+  * **Returns**: A `Promise` that resolves with the **new value** as soon as the specified property changes.
+
