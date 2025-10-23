@@ -1,3 +1,5 @@
+# Repka
+
 <p align="center">
   <img 
     src="https://raw.githubusercontent.com/gaarson/repka/refs/heads/master/.github/assets/logo.png" 
@@ -5,9 +7,7 @@
     width="350">
 </p>
 
-# Repka
-
-**Repka** is a simple yet powerful state manager for React. It leverages plain JavaScript classes as stores, providing high performance with **selective re-renders** right out of the box.
+This is a simple yet powerful state manager for React. It leverages plain JavaScript classes as stores, providing high performance with **selective re-renders** right out of the box.
 
 Forget about selectors and complex boilerplate. With Repka, you interact with your state as if it were a plain object, and the library ensures your components update efficiently.
 
