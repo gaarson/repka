@@ -24,7 +24,7 @@ Forget about selectors and complex boilerplate. With Repka, you interact with yo
 ```bash
 
 # npm
-npm install https://github.com/gaarson/repka
+npm install repka
 ```
 
 -----
