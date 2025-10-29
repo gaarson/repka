@@ -2,9 +2,10 @@ import React from 'react';
 import { FIELDS_PREFIX } from 'core/domain';
 import { REACTION_STACK } from 'reaction';
 
-export const simpleHook = <T extends object>(context: any, prop: keyof T): T[keyof T] => {
+export const simpleHook = <T extends object>(context: T, prop: keyof T): T[keyof T] => {
   const useSync = React.useSyncExternalStore;
   if (!useSync) {
+    // @ts-ignore (старый React)
     return context[`${FIELDS_PREFIX}data`][prop];
   }
 
@@ -59,22 +60,23 @@ export const simpleHook = <T extends object>(context: any, prop: keyof T): T[key
       try {
         return context[`${FIELDS_PREFIX}data`];
       } catch(error) {
-        return {};
+        return {} as T;
       }
     },
     () => {
       try {
         return context[`${FIELDS_PREFIX}data`];
       } catch (error) {
-        return {};
+        return {} as T;
       }
     }
   );
 
+  // @ts-ignore
   return state ? state[prop] : context[`${FIELDS_PREFIX}data`][prop];
 }
 
-export function simpleReactProvider<T extends object>(prop: keyof T): T[keyof T] {
+export function simpleReactProvider<T extends object>(this: T, prop: keyof T): T[keyof T] {
   let isInReactRender = false;
 
   if (React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE) {

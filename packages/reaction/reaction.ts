@@ -2,7 +2,7 @@ import { FIELDS_PREFIX } from "core/domain";
 import { REACTION_STACK } from "reaction";
 
 type Store = {
-  [`__REPO__onUpdate`]: ((prop: string, value: unknown) => void)[];
+  [`__REPO__onUpdate`]?: ((prop: string, value: unknown) => void)[];
 };
 
 export class Reaction {

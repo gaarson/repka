@@ -1,5 +1,5 @@
 type Store = {
-    [`__REPO__onUpdate`]: ((prop: string, value: unknown) => void)[];
+    [`__REPO__onUpdate`]?: ((prop: string, value: unknown) => void)[];
 };
 export declare class Reaction {
     private name;

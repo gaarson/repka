@@ -3,14 +3,18 @@ import React, { useReducer, useRef, useEffect } from 'react';
 import { Reaction } from 'reaction/reaction';
 import { simpleHook } from './index';
 
-function createHOCWrapper(store: any, Component: React.ComponentType) {
-const HOCWrapper: React.FC<any> = (props) => {
+function createHOCWrapper<P extends {}>(
+  store: any, 
+  Component: React.ComponentType
+): React.FC<P> {
+  const HOCWrapper: React.FC<P> = (props: P) => {
     const [, forceUpdate] = useReducer(x => x + 1, 0);
 
     const reactionRef = useRef<Reaction | null>(null);
 
     if (reactionRef.current === null) {
-      reactionRef.current = new Reaction(`${Component.name}_Observer`, forceUpdate);
+      const componentName = Component.displayName || Component.name || 'Component';
+      reactionRef.current = new Reaction(`${componentName}_Observer`, forceUpdate);
     }
 
     reactionRef.current.updateScheduler(forceUpdate);
@@ -29,10 +33,13 @@ const HOCWrapper: React.FC<any> = (props) => {
   return HOCWrapper;
 }
 
-export function repkaHookAndHoc(arg: Function | string) {
+export function repkaHookAndHoc<T extends object>(
+  this: T,
+  arg: React.ComponentType<any> | keyof T
+): React.FC<any> | T[keyof T] {
   try {
-    if (typeof arg !== 'string')  return createHOCWrapper(this, arg as React.ComponentType); 
-    else if (typeof arg === 'string') return simpleHook(this, arg);
+    if (typeof arg !== 'string') return createHOCWrapper<T>(this, arg as React.ComponentType<any>); 
+    else if (arg) return simpleHook<T>(this, arg as keyof T);
     else console.error(
       '[Repka] Ошибка вызова хука. Нужно указать либо функциональный компонент либо имя поля за которым хотите следить'
     );

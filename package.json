@@ -1,6 +1,6 @@
 {
   "name": "repka",
-  "version": "0.1.0",
+  "version": "0.1.02",
   "description": "A simple and powerful state manager for React with selective re-renders",
   "author": "ruser",
   "license": "MIT",
