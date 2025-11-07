@@ -1,6 +1,6 @@
 import {ICallable, Callable, SPECIAL_KEY, FIELDS_PREFIX} from './domain';
 
-function get(obj, prop, receiver) {
+function get(obj, prop) {
   if (
     obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY)
     && prop !== obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY)
@@ -26,7 +26,7 @@ function get(obj, prop, receiver) {
   return obj[`${FIELDS_PREFIX}data`][prop];
 }
 
-const set = (obj, prop, value): boolean => {
+const set = (obj, prop, value, receiver): boolean => {
   if ((typeof prop === 'string' && prop.startsWith(FIELDS_PREFIX)) || prop === '__call') {
     obj[prop] = value;
     return true;
@@ -50,7 +50,7 @@ const set = (obj, prop, value): boolean => {
     }
     if (obj[`${FIELDS_PREFIX}onUpdate`].length) {
       obj[`${FIELDS_PREFIX}onUpdate`].forEach(
-        (fn: (...args: any[]) => void) => fn && fn(prop, value)
+        (fn: (...args: any[]) => void) => fn && fn(prop, value, receiver)
       );
     }
   }
@@ -70,7 +70,13 @@ function getAllMethodNames(toCheck: {[key: string]: unknown}) {
   } while (obj = Object.getPrototypeOf(obj));
   
   return props.sort().filter((e, i, arr) => {
-    if (e != arr[i + 1] && typeof toCheck[e] == 'function') return true;
+    if (e != arr[i + 1] && typeof toCheck[e] == 'function') {
+       
+      if (`${FIELDS_PREFIX}data` in toCheck[e]) {
+        return false;
+      }
+      return true;
+    } 
   });
 }
 

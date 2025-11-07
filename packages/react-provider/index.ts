@@ -77,8 +77,13 @@ export const simpleHook = <T extends object>(context: T, prop: keyof T): T[keyof
 }
 
 export function simpleReactProvider<T extends object>(this: T, prop: keyof T): T[keyof T] {
+  const currentReaction = REACTION_STACK[REACTION_STACK.length - 1];
+  if (currentReaction) {
+    currentReaction.reportDependency(this, prop as string);
+    return this[`${FIELDS_PREFIX}data`][prop];
+  }
+  
   let isInReactRender = false;
-
   if (React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE) {
     if (React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?.H !== null) {
       isInReactRender = true;
@@ -89,12 +94,6 @@ export function simpleReactProvider<T extends object>(this: T, prop: keyof T): T
 
   if (!isInReactRender) return this[`${FIELDS_PREFIX}data`][prop];
 
-  const currentReaction = REACTION_STACK[REACTION_STACK.length - 1];
-  if (currentReaction) {
-    currentReaction.reportDependency(this, prop as string);
-    return this[`${FIELDS_PREFIX}data`][prop];
-  }
-  
   try {
     return simpleHook<T>(this, prop)
   } catch {

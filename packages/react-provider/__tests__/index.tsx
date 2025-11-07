@@ -1,6 +1,7 @@
 import React from 'react';
 import {render, act, fireEvent} from '@testing-library/react';
 
+import { repka } from '../../repka';
 import { createSource } from '../../core/index';
 import { simpleReactProvider } from '../index';
 import { FIELDS_PREFIX } from '../../core/domain';
@@ -152,4 +153,122 @@ describe('create simple provider', () => {
     expect(simple[`${FIELDS_PREFIX}muppet`]).toMatchObject({});
   });
 
+});
+describe('Direct Access (Hook) Integration', () => {
+  test('Hook: component should re-render when a nested store property changes', () => {
+    const childStore = repka({ val: 10 });
+    const parentStore = repka({ child: childStore });
+    const renderSpy = jest.fn();
+
+    const MyComponent = () => {
+      renderSpy();
+      const val = parentStore.child.val;
+      return <div>{val}</div>;
+    };
+
+    const { getByText, unmount } = render(<MyComponent />);
+    expect(getByText('10')).toBeInTheDocument(); 
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      childStore.val = 20;
+    });
+
+    expect(getByText('20')).toBeInTheDocument();
+    expect(renderSpy).toHaveBeenCalledTimes(2);
+
+    const newChild = repka({ val: 30 });
+    act(() => {
+      parentStore.child = newChild;
+    });
+
+    expect(getByText('30')).toBeInTheDocument();
+    expect(renderSpy).toHaveBeenCalledTimes(3);
+
+    act(() => {
+      childStore.val = 99; 
+    });
+    expect(renderSpy).toHaveBeenCalledTimes(3); 
+
+    unmount(); 
+  });
+
+  test('Hook: proves the SILENT BUG', () => {
+    const childStore = repka({ val: 10 });
+    const parentStore = repka({ child: childStore });
+
+    const MyComponent = ({ show }) => {
+      let val = 'default';
+      if (show) {
+        val = parentStore.child.val;
+      }
+      return <div>{val}</div>;
+    };
+    
+    const { getByText, queryByText } = render(<MyComponent show={true} />);
+
+    expect(getByText('10')).toBeInTheDocument();
+
+    act(() => {
+      parentStore.child.val = 99;
+    });
+
+    expect(queryByText('99')).toBeInTheDocument();
+  });
+
+  // test('Hook: should CRASH LOUDLY if hook order changes', () => {
+  //   const childStore = repka({ val: 10 });
+  //   const parentStore = repka({ child: childStore });
+
+  //   const MyComponent = ({ show }) => {
+  //     React.useState(0);
+
+  //     let val = 'default';
+  //     if (show) {
+  //       val = parentStore.child.val;
+  //     }
+  //     return <div>{val}</div>;
+  //   };
+
+  //   const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+  //   const { rerender } = render(<MyComponent show={false} />);
+
+  //   expect(() => {
+  //     rerender(<MyComponent show={true} />);
+  //   }).toThrow();
+
+  //   errorSpy.mockRestore();
+  // });
+
+  test('Hook: PROVES the silent bug on unstable hook order', () => {
+    const childStore = repka({ val: 10 });
+    const parentStore = repka({ child: childStore });
+
+    const MyComponent = ({ show }) => {
+      React.useState(0); // Хук №1
+      let val = 'default';
+      if (show) {
+        val = parentStore.child.val; 
+      }
+      return <div>{val}</div>;
+    };
+
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { rerender, getByText, queryByText } = render(<MyComponent show={false} />);
+    expect(getByText('default')).toBeInTheDocument();
+
+    rerender(<MyComponent show={true} />);
+    expect(getByText('10')).toBeInTheDocument(); 
+
+    act(() => {
+      parentStore.child.val = 99;
+    });
+
+    expect(getByText('10')).toBeInTheDocument(); 
+    expect(queryByText('99')).not.toBeInTheDocument(); 
+
+    errorSpy.mockRestore();
+  });
 });

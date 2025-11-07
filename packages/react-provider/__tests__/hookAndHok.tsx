@@ -252,4 +252,39 @@ describe('Integration Tests & Shortcomings', () => {
     expect(screen.getByText('Foo: 1, Bar: b')).toBeInTheDocument();
   });
 
+  test('HOC: component should re-render when a nested store property changes', () => {
+    const childStore = repka({ val: 10 });
+    const parentStore = repka({ child: childStore });
+    const renderSpy = jest.fn();
+
+    const MyComponent = parentStore(() => {
+      renderSpy();
+      return <div>{parentStore.child.val}</div>;
+    });
+
+    render(<MyComponent />);
+    expect(screen.getByText('10')).toBeInTheDocument();
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      childStore.val = 20;
+    });
+
+    expect(screen.getByText('20')).toBeInTheDocument();
+    expect(renderSpy).toHaveBeenCalledTimes(2);
+
+    const newChild = repka({ val: 30 });
+    act(() => {
+      parentStore.child = newChild;
+    });
+
+    expect(screen.getByText('30')).toBeInTheDocument();
+    expect(renderSpy).toHaveBeenCalledTimes(3);
+
+    act(() => {
+      childStore.val = 99;
+    });
+    expect(renderSpy).toHaveBeenCalledTimes(3);
+  });
+
 });

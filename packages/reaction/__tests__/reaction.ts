@@ -2,10 +2,10 @@ import { Reaction } from '../reaction';
 import { FIELDS_PREFIX } from 'core/domain';
 
 const createMockStore = () => ({
-  [`${FIELDS_PREFIX}onUpdate`]: [],
-  simulateUpdate(prop: string) {
-    this[`${FIELDS_PREFIX}onUpdate`].forEach(fn => fn(prop));
-  }
+  [`${FIELDS_PREFIX}onUpdate`]: [],
+  simulateUpdate(prop: string) {
+    this[`${FIELDS_PREFIX}onUpdate`].forEach(fn => fn(prop, 'mock_value', this));
+  }
 });
 
 describe('Reaction class', () => {

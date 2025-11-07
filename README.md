@@ -7,253 +7,322 @@
     width="350">
 </p>
 
-This is a simple yet powerful state manager for React. It leverages plain JavaScript classes as stores, providing high performance with **selective re-renders** right out of the box.
+This is a simple yet powerful state manager for React. It leverages plain JavaScript classes (or objects) as stores, providing high performance with selective re-renders out of the box.
 
-Forget about selectors and complex boilerplate. With Repka, you interact with your state as if it were a plain object, and the library ensures your components update efficiently.
+Forget about selectors and complex boilerplate. With `Repka`, you interact with your state as if it were a plain object, and the library ensures your components update efficiently.
 
 ## ✨ Key Features
 
-  * **Class-based Stores**: Define your state and the logic to change it all in one place.
-  * **Direct Mutations**: Modify state with simple assignments (`store.myValue = 'new value'`). No reducers or setters are needed.
-  * **High Performance**: Components re-render *only* when the specific data they use changes.
-  * **Zero-Config**: Just create an instance of your class with `repka` and start using it.
-  * **Automatic Cleanup**: Subscriptions are automatically cleaned up when components unmount, preventing memory leaks.
+- **Class or Object Stores:** Define your state and logic in a class or a plain object.
+- **Direct Mutations:** Modify state with simple assignments (`store.myValue = 'new value'`). No reducers or setters are needed.
+- **High Performance:** Components re-render only when the _specific_ data they use changes.
+- **Boilerplate-Free TypeScript:** Strong typing out of the box with automatic type inference. No duplicate interfaces needed.
+- **Composable:** Nests `repka` stores within each other for granular, decoupled state.
+- **Automatic Cleanup:** Subscriptions are automatically cleaned up when components unmount, preventing memory leaks.
 
 ## 💾 Installation
 
 ```bash
-
 # npm
 npm install repka
 ```
-
------
 
 ## 🚀 Getting Started
 
 ### 1\. Define Your Store
 
-Create a plain JavaScript class that holds your state (properties) and mutation logic (methods).
-Use the main `repka` function to create a reactive instance of your store.
+Create a plain JavaScript class or object. `Repka` uses **type inference**, so you don't need to create separate interfaces.
 
 ```typescript
 // store.ts
+import { repka } from "repka";
 
-import { repka } from 'repka';
-
-// 1. (Optional) Define an interface for your store
-interface ISimpleStore {
-  str: string;
-  num: number;
-  reset(): void;
-}
-
-// 2. Create a class implementing that interface
-class SimpleStore implements ISimpleStore {
-  str = 'initial string';
+// --- Option 1: Using a Class (Recommended for complex logic) ---
+class SimpleStore {
+  str = "initial string";
   num = 123;
 
   reset() {
-    this.str = 'initial string';
+    this.str = "initial string";
     this.num = 123;
   }
 }
 
-// 3. Create and export your reactive store
-export const simpleStore = repka<ISimpleStore>(new SimpleStore());
+// 2. Create and export your reactive store
+// No <ISimpleStore> needed! The type is inferred automatically.
+export const simpleStore = repka(new SimpleStore());
+
+// --- Option 2: Using a Plain Object ---
+export const anotherStore = repka({
+  count: 0,
+  increment() {
+    this.count++;
+  },
+});
+
+// The type of simpleStore is now:
+// SimpleStore & IRepkaCallable<SimpleStore>
 ```
 
 ### 2\. Use in Your React Component
 
-You can now import `simpleStore` and use it in your components. There are two primary ways to make your component "listen" to changes.
+You can now import `simpleStore` and use it. There are two primary ways to "listen" to changes.
 
-```jsx
+```javascript
 // MyComponent.jsx
 import React from 'react';
 import { simpleStore } from './store';
 
-// See the "Usage in React" section for more on this.
-const MyComponent = () => {
-  return (
-    <div>
-      {/* 1. Read data from the store */}
-      <p>String: {simpleStore.str}</p>
-      <p>Number: {simpleStore.num}</p>
-      
-      {/* 2. Change data via direct assignment */}
-      <button onClick={() => simpleStore.str = 'new string!'}>
-        Change String
-      </button>
+// 1. Read data from the store
+<p>String: {simpleStore.str}</p>
 
-      {/* 3. Call a method from the store */}
-      <button onClick={() => simpleStore.reset()}>
-        Reset
-      </button>
-    </div>
-  );
-};
+// 2. Change data via direct assignment
+<button onClick={() => simpleStore.str = 'new string!'}>
+  Change String
+</button>
+
+// 3. Call a method from the store
+<button onClick={() => simpleStore.reset()}>
+  Reset
+</button>
 ```
 
------
+---
 
 ## 📖 Usage in React: The Two Methods
 
-Repka provides two ways to consume state. Choosing the right one is critical for a stable application.
+`Repka` provides two ways to subscribe to state.
 
-### Method 1: Direct Property Access (The "Easy" Way)
+### Method 1: The HOC Wrapper (Recommended Way)
 
-You can access properties like `simpleStore.foo` directly inside your component's render body.
+This is the **safest and recommended** way to use `Repka`.
 
-**Under the hood, `simpleStore.foo` acts like a React Hook** (`useSyncExternalStore`).
+Wrap your component with the store instance itself. The store acts as a Higher-Order Component (HOC). This method reliably tracks all properties your component accesses during its render, even if they are **inside conditional logic** (`if`, `&&`, `?:`).
 
-```jsx
+```javascript
+// MyComponent.jsx
+import { simpleStore } from "./store";
+
+// Wrap the component with the store
+export const MyComponent = simpleStore(({ shouldShow }) => {
+  // ✅ SAFE: We can now use conditional logic
+  let value = "default";
+  if (shouldShow) {
+    value = simpleStore.str;
+  }
+
+  return (
+    <div>
+      <p>Value: {value}</p>
+      <button onClick={() => (simpleStore.str = "new string!")}>
+        Change String
+      </button>
+    </div>
+  );
+});
+```
+
+### Method 2: Direct Property Access (Advanced Shortcut)
+
+You can also access store properties (`store.prop`) directly in your component's render body. Under the hood, this acts like a React Hook (`useSyncExternalStore`).
+
+```javascript
 const StringDisplay = () => {
   // This access subscribes the component to 'str'
   return <p>String: {simpleStore.str}</p>;
 };
 ```
 
-> ### ⛔ CRITICAL WARNING: Respect the Rules of Hooks
->
-> Because direct access (`store.prop`) **is a hook call**, you **MUST** follow the **[Rules of Hooks](https://www.google.com/search?q=https://react.dev/warnings/invalid-hook-call)**.
->
-> **NEVER** access store properties conditionally, in loops, or in event handlers (if you expect reactivity).
->
-> #### ❌ **This will BREAK your app:**
->
-> ```jsx
-> const MyComponent = ({ shouldShow }) => {
->   let value = 'default';
->   if (shouldShow) {
->     // 🚨 WRONG! Calling a hook (store.foo) conditionally.
->     value = simpleStore.foo; 
->   }
->   return <div>{value}</div>
-> }
-> ```
->
-> This will cause an "Invalid hook call" error, as you are changing the order of hook calls between renders.
+⛔️ **CRITICAL WARNING: Respect the Rules of Hooks**
 
------
+Because direct access (`store.prop`) **is a hook call**, you MUST follow the [React Rules of Hooks](https://reactjs.org/docs/hooks-rules.html).
 
-### Method 2: The HOC Wrapper (The "Safe" Way)
+**NEVER** access store properties conditionally, in loops, or in event handlers (if you expect reactivity).
 
-To safely use state within complex components with conditional logic, wrap your component with the store instance itself. The store acts as a Higher-Order Component (HOC).
+❌ **This will BREAK your app:**
 
-This method subscribes your component to *all* properties it accesses during its render, using a single, stable subscription that **does not** violate the Rules of Hooks.
-
-```jsx
-import { simpleStore } from './store';
-
-export const MyComponent = simpleStore(({ shouldShow }) => {
-  // ✅ SAFE: We can now use conditional logic
-  let value = 'default';
+```javascript
+const MyComponent = ({ shouldShow }) => {
+  let value = "default";
   if (shouldShow) {
-    value = simpleStore.foo; 
+    // 🚨 WRONG! Calling a hook (store.prop) conditionally.
+    // This will cause an "Invalid hook call" error.
+    value = simpleStore.str;
   }
-  return <div>{value}</div>
-})
+  return <div>{value}</div>;
+};
 ```
 
-**Recommendation:**
+> **Our Recommendation:**
+>
+> - **HOC (`repka(Component)`):** Use this 99% of the time. It's safe, works with any logic, and is compatible with `React.memo`.
+> - **Direct Access (`store.prop`):** Use this _only_ for simple components where properties are _always_ accessed unconditionally at the top level.
 
-  * **Direct Access (`store.foo`):** Use for simple components where properties are *always* accessed unconditionally at the top level.
-  * **HOC Wrapper (`store(Component)`):** Use for *any* component that has conditional logic (`if`, `&&`, `? :`) that might change which store properties are accessed.
-
------
+---
 
 ## ⚡ Performance: Selective Re-renders
 
-Repka's performance magic is that it tracks *which* property is used by *which* component.
+Repka's performance magic is that it tracks which property is used by which component.
 
-If you change `store.num`, **only the components that use `store.num`** will re-render. Components that only use `store.str` will be skipped.
+If you change `store.num`, only components that use `store.num` will re-render. Components that only use `store.str` will be skipped.
 
-### Example
-
-```jsx
-import { simpleStore } from './store';
+```javascript
+import { simpleStore } from "./store";
 
 // This component ONLY depends on `simpleStore.str`
-const StringDisplay = () => {
-  console.log('Render StringDisplay');
+const StringDisplay = simpleStore(() => {
+  // Using the HOC
+  console.log("Render StringDisplay");
   return <p>String: {simpleStore.str}</p>;
-};
+});
 
 // This component ONLY depends on `simpleStore.num`
-const NumberDisplay = () => {
-  console.log('Render NumberDisplay');
+const NumberDisplay = simpleStore(() => {
+  // Using the HOC
+  console.log("Render NumberDisplay");
   return <p>Number: {simpleStore.num}</p>;
-};
+});
 
 const App = () => (
   <>
     <StringDisplay />
     <NumberDisplay />
-    <button onClick={() => simpleStore.str = 'new value'}>
+    <button onClick={() => (simpleStore.str = "new value")}>
       Change Only String
     </button>
   </>
 );
 ```
 
-When you click the button, you will **only** see `"Render StringDisplay"` in the console. `NumberDisplay` will not re-render because its data did not change.
+When you click the button, you will **only see "Render StringDisplay"** in the console. `NumberDisplay` will not re-render because its data did not change.
 
------
+---
 
-## 🧐 Reactivity Outside React: `watch` Example
+## 🧩 Composing Stores (New Feature\!)
 
-You can create a recursive function to "listen" for all future changes to a property.
+You can safely nest `repka` stores inside each other. The reactivity will be tracked across stores automatically.
+
+This is **different** from the "shallow reactivity" limitation. While plain objects aren't tracked deeply, other `repka` instances are.
+
+```typescript
+// stores.ts
+import { repka } from "repka";
+
+export const childStore = repka({
+  text: "Hello",
+});
+
+export const parentStore = repka({
+  child: childStore,
+  // You can even swap them out
+  setNewChild() {
+    this.child = repka({ text: "World" });
+  },
+});
+```
 
 ```javascript
-import { repka, watch } from 'repka';
+// MyComponent.jsx
+import { parentStore } from "./stores";
+
+// This component tracks `parentStore.child` AND `parentStore.child.text`
+export const MyComponent = parentStore(() => {
+  return (
+    <div>
+      <p>{parentStore.child.text}</p>
+
+      {/* This will trigger a re-render */}
+      <button onClick={() => (parentStore.child.text = "New Text!")}>
+        Change Child Text
+      </button>
+
+      {/* This will also trigger a re-render */}
+      <button onClick={() => parentStore.setNewChild()}>Set New Child</button>
+    </div>
+  );
+});
+```
+
+When you update `childStore.text` directly, `MyComponent` will correctly re-render because its HOC (`Reaction`) is subscribed to changes in both `parentStore` and `childStore`.
+
+---
+
+## 💡 How it Works
+
+`Repka` uses a Proxy-based observable pattern with a dual-subscription mechanism:
+
+1.  **HOC Wrapper (`repka(Component)`):** This is the recommended, MobX-like approach. It wraps your component in a `Reaction` (a special observer class). During the render (`reaction.track(...)`), any `store.prop` access is intercepted by the `Proxy`'s `get` handler. This handler reports the dependency (e.g., `foo`) to the `Reaction`. When `store.foo = 'new'` is called, the store notifies all `Reaction` objects subscribed to `foo`, which then trigger a `forceUpdate` in your component.
+
+2.  **Direct Access (`store.prop`):** This is an advanced shortcut. When the `Proxy`'s `get` handler detects it's _not_ inside a `Reaction.track()` call, it instead invokes a React hook: `useSyncExternalStore`. This creates a granular subscription _only_ to that specific property. This is why it's subject to the Rules of Hooks.
+
+---
+
+## ⛔️ Known Limitations
+
+`Repka` is designed for simplicity, which comes with trade-offs you must be aware of:
+
+- **Shallow Reactivity (for Plain Objects):** `Repka` uses a **shallow `Proxy`**. It only tracks top-level properties of your store. Mutating a _plain nested object_ (e.g., `store.myObject.foo = 'bar'`) **will not** trigger a re-render.
+  - **Solution:** You must re-assign the object: `store.myObject = { ...store.myObject, foo: 'bar' }`.
+  - **Exception:** This limitation does **not** apply to nesting other `repka` stores. See "Composing Stores" above.
+
+- **Dynamic HOC Dependencies:** The HOC wrapper (`repka(Component)`) only tracks dependencies that are _accessed during the current render_. If a property is behind conditional logic (e.g., `if (show)`), it will only become a dependency _after_ `show` becomes `true` and the component re-renders.
+
+- **React Compiler:** Like all proxy-based state managers that use "magic" (e.g., MobX), the upcoming React Compiler will likely struggle to "see" the dependencies. This is a known trade-off for the DX of direct mutation.
+
+---
+
+## 🧐 Reactivity Outside React: `watch`
+
+You can use the `watch` function to react to changes outside of a React component (e.g., for logging or async logic).
+
+```javascript
+import { repka, watch } from "repka";
 
 const state = repka({ foo: 0 });
 
-// A function to perpetually watch and log 'foo' changes
-const watchForFooChanges = async () => {
+const logChanges = async () => {
   console.log('Waiting for "foo" to change...');
-  const updatedValue = await watch(state, 'foo');
-  console.log(`"foo" changed! New value: ${updatedValue}`);
-  
-  // Call itself to wait for the next change
-  watchForFooChanges();
-}
+  const newValue = await watch(state, "foo");
+  console.log(`"foo" changed! New value: ${newValue}`);
+
+  // You can call this in a loop or recursively
+  // logChanges();
+};
 
 // Start the watcher
-watchForFooChanges();
+logChanges();
 
-// Sometime later, your app changes the state
-setInterval(() => {
-  state.foo += 1;
+// Somewhere in your app...
+setTimeout(() => {
+  state.foo = 1;
 }, 2000);
 
 /*
 Console Output:
 Waiting for "foo" to change...
 "foo" changed! New value: 1
-Waiting for "foo" to change...
-"foo" changed! New value: 2
-Waiting for "foo" to change...
-...
 */
 ```
 
------
-
 ## 📚 API Reference
 
-### `repka<T>(sourceObject: T)`
+### `repka(sourceObject)`
 
 The main function to create a reactive store.
 
-  * `sourceObject`: An instance of your store class (e.g., `new MyStore()`).
-  * **Returns**: A reactive proxy of your object that can be used in React and acts as a HOC.
+- `sourceObject: T`: An instance of your store class (e.g., `new MyStore()`) or a plain object.
+- **Returns:** A reactive `RepkaStore<T>` proxy. This object can be used directly for property access, as a HOC, and for hooks.
 
 ### `watch(store, propertyKey)`
 
-An async function to react to state changes *outside* of a React component (e.g., for logging, analytics, or async logic).
+An async function to react to state changes outside of a React component.
 
-  * `store`: The reactive store instance created by `repka`.
-  * `propertyKey`: The string name of the property to watch.
-  * **Returns**: A `Promise` that resolves with the **new value** as soon as the specified property changes.
+- `store`: The reactive store instance created by `repka`.
+- `propertyKey: string`: The string name of the property to watch.
+- **Returns:** A `Promise` that resolves with the new value as soon as the specified property changes.
 
+<!-- end list -->
+
+```
+
+```

@@ -2,7 +2,7 @@ import { FIELDS_PREFIX } from "core/domain";
 import { REACTION_STACK } from "reaction";
 
 type Store = {
-  [`__REPO__onUpdate`]?: ((prop: string, value: unknown) => void)[];
+  [`__REPO__onUpdate`]?: ((prop: string, value: unknown, obj: any) => void)[];
 };
 
 export class Reaction {
@@ -39,17 +39,17 @@ export class Reaction {
       deps = new Set();
       this.dependencies.set(store, deps);
 
-      store[`${FIELDS_PREFIX}onUpdate`].push(this.onUpdate); 
+      if (store[`${FIELDS_PREFIX}onUpdate`].indexOf(this.onUpdate) === -1) {
+        store[`${FIELDS_PREFIX}onUpdate`].push(this.onUpdate);
+      }
     }
     deps.add(prop);
   }
 
-  private onUpdate = (updatedProp: string, value: unknown) => {
-    for (const [,props] of this.dependencies.entries()) {
-      if (props.has(updatedProp)) {
-        this.scheduler();
-        return; 
-      }
+  private onUpdate = (updatedProp: string, value: unknown, store: Store) => {
+    const props = this.dependencies.get(store);
+    if (props && props.has(updatedProp)) {
+      this.scheduler();
     }
   }
 
@@ -73,3 +73,4 @@ export class Reaction {
     this.isDisposed = true;
   }
 }
+
