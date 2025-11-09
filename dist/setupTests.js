@@ -1,1 +1,3 @@
-import"@testing-library/jest-dom";
+// packages/setupTests.js
+import "@testing-library/jest-dom";
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsiLi4vcGFja2FnZXMvc2V0dXBUZXN0cy5qcyJdLAogICJzb3VyY2VzQ29udGVudCI6IFsiaW1wb3J0ICdAdGVzdGluZy1saWJyYXJ5L2plc3QtZG9tJztcbiJdLAogICJtYXBwaW5ncyI6ICI7QUFBQSxPQUFPOyIsCiAgIm5hbWVzIjogW10KfQo=
