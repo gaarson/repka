@@ -1,3 +1,6 @@
+'use client'
+
+// import { useState } from "react";
 import { repka } from "repka";
 
 class State {
@@ -17,7 +20,6 @@ class State {
     }}};
   } 
 }
-
 const state = repka(new State())
 
 const Button = ({ onClick }: { onClick: () => void }) => {
@@ -29,8 +31,8 @@ const Button = ({ onClick }: { onClick: () => void }) => {
 };
 
 const MagicButton = state(() => {
-  const [cond, setCond] = useState(true);
-
+  // const [cond, setCond] = useState(true);
+return;
   return (
     <div>
       <button onClick={() => setCond(c => !c)}>Toggle Magic</button>
@@ -40,8 +42,6 @@ const MagicButton = state(() => {
 })
 
 const Home = state(() => {
-  
-
   const some = state.foo ? 'aa' : 'bb';
 
   const { puk } = state;

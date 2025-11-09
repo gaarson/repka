@@ -2,22 +2,17 @@ import React from 'react';
 import { simpleHash } from './stringHash';
 
 export let KNOWN_SPAM_HASH: string | null = null;
-
-export function __SET_SPAM_HASH_FOR_TESTS__(hash: string | null) {
+export const __SET_SPAM_HASH_FOR_TESTS__ = (hash: string | null) => {
   KNOWN_SPAM_HASH = hash;
+}
+export function getSpamHash() {
+  return KNOWN_SPAM_HASH;
 }
 
 const BrokenComponent = () => {
   React.useEffect(() => {
     React.useState();
   }, []);
-  return null;
-};
-
-const SsrBrokenComponent = () => {
-  if (true) {
-    React.useState(0);
-  }
   return null;
 };
 
@@ -30,46 +25,52 @@ const cleanErrorMessage = (message: string | Event): string => {
 export async function runServerCheck() {
   const { renderToString } = await import('react-dom/server');
 
-  const originalConsoleError = console.error;
-  let errorMessage: string | null = null; 
+  const ServerBrokenComponent = () => {
+    import('react')?.then((def) => {
+      def?.useSyncExternalStore()
+    }).catch(() => {});
 
-  console.error = (...args: any[]) => {
-    if (!errorMessage) {
-      errorMessage = args[0] as string;
-    }
+    return
   };
 
-  try {
-    renderToString(React.createElement(SsrBrokenComponent));
-  } catch (e) {
-    if (!errorMessage) {
-      errorMessage = (e as Error).message;
+  return new Promise(resolve => {
+    const originalConsoleError = console.error;
+
+    const TIMEOUT = 100; 
+
+    console.error = (message: any, ...optionalParams: any[]) => {
+      const errorString = typeof message === 'string' ? message : String(message);
+      const isTargetError = errorString.includes('Invalid hook call') || 
+                            errorString.includes('Minified React error'); 
+
+      if (isTargetError && !KNOWN_SPAM_HASH) {
+        const cleanMessage = cleanErrorMessage(errorString);
+        KNOWN_SPAM_HASH = simpleHash(cleanMessage.substring(0, 200));
+        
+        console.error = originalConsoleError;
+        resolve(KNOWN_SPAM_HASH); 
+        return; 
+      }
+
+      originalConsoleError(message, ...optionalParams);
+    };
+
+    try {
+      renderToString(React.createElement(ServerBrokenComponent));
+      
+      setTimeout(() => {
+        if (!KNOWN_SPAM_HASH) {
+          console.error = originalConsoleError;
+          resolve(false);
+        }
+      }, TIMEOUT); 
+
+    } catch (error) {
+      console.error = originalConsoleError;
+      resolve(true);
     }
-  } finally {
-    console.error = originalConsoleError;
-  }
-  
-  if (errorMessage) {
-    const cleanMessage = cleanErrorMessage(errorMessage);
-    KNOWN_SPAM_HASH = simpleHash(cleanMessage.substring(0, 200));
-  }
+  });
 }
-
-// export async function runServerCheck() {
-//   const { renderToString } = await import('react-dom/server');
-
-//   const originalConsoleError = console.error;
-//   console.error = () => {}; 
-
-//   try {
-//     renderToString(React.createElement(BrokenComponent));
-//   } catch (error: any) {
-//     const cleanMessage = cleanErrorMessage(error.message);
-//     KNOWN_SPAM_HASH = simpleHash(cleanMessage.substring(0, 200));
-//   } finally {
-//     console.error = originalConsoleError;
-//   }
-// }
 
 export async function runClientCheck() {
   try {
@@ -200,7 +201,6 @@ export async function runClientCheck() {
 
 (async () => {
   const isServer = typeof window === 'undefined';
-
   try {
     if (isServer) {
       await runServerCheck();
