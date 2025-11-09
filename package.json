@@ -19,7 +19,6 @@
   "files": [
     "dist"
   ],
-  "license": "MIT",
   "main": "dist/repka/index.js",
   "types": "dist/repka/index.d.ts",
   "exports": {
@@ -57,7 +56,9 @@
   "scripts": {
     "test": "our-scripts test -p packages",
     "build": "our-scripts build -p packages -em -dts",
-    "watch": "our-scripts start -p packages -em -dts"
+    "watch": "our-scripts start -p packages -em -dts",
+    "test:browser": "vitest run --config ./vitest.browser.config.ts",
+    "test:ssr": "vitest run --config ./vitest.node.config.ts"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -68,9 +69,13 @@
     "@testing-library/react": "^16.0.1",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.24",
+    "@vitest/browser": "^4.0.8",
+    "@vitest/browser-playwright": "^4.0.8",
     "our-scripts": "github:gaarson/mycra#tests-update-rework",
+    "playwright-chromium": "^1.56.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-test-renderer": "^18.3.1"
+    "react-test-renderer": "^18.3.1",
+    "vitest": "^4.0.8"
   }
 }

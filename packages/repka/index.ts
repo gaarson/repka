@@ -1,3 +1,5 @@
+'use client'
+
 import { createSource } from 'core';
 import { simpleReactProvider } from 'react-provider';
 import { repkaHookAndHoc } from 'react-provider/hookAndHok';

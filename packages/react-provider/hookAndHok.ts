@@ -1,4 +1,4 @@
-import React, { useReducer, useRef, useEffect } from 'react';
+import React from 'react';
 
 import { Reaction } from 'reaction/reaction';
 import { simpleHook } from './index';
@@ -8,9 +8,9 @@ function createHOCWrapper<P extends {}>(
   Component: React.ComponentType
 ): React.FC<P> {
   const HOCWrapper: React.FC<P> = (props: P) => {
-    const [, forceUpdate] = useReducer(x => x + 1, 0);
+    const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 
-    const reactionRef = useRef<Reaction | null>(null);
+    const reactionRef = React.useRef<Reaction | null>(null);
 
     if (reactionRef.current === null) {
       const componentName = Component.displayName || Component.name || 'Component';
@@ -19,7 +19,7 @@ function createHOCWrapper<P extends {}>(
 
     reactionRef.current.updateScheduler(forceUpdate);
 
-    useEffect(() => {
+    React.useEffect(() => {
       reactionRef.current.undispose();
       return () => reactionRef.current.dispose();
     }, [reactionRef.current]);

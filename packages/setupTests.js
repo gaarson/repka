@@ -1,3 +1,9 @@
+
+import { TextEncoder, TextDecoder } from 'util';
+
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
 import '@testing-library/jest-dom';
 
 import { __SET_SPAM_HASH_FOR_TESTS__ } from './react-provider/spamHash';

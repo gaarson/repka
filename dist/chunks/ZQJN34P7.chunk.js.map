@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../packages/watcher/index.ts"],
-  "sourcesContent": ["import { FIELDS_PREFIX } from \"core/domain\";\n\nexport const watch = <T = any>(sourceObj: T, propertyName: string): Promise<T> => {\n  const index = sourceObj[`${FIELDS_PREFIX}onUpdate`]?.length || 0;\n\n  return new Promise((resolve) => {\n    if (sourceObj[`${FIELDS_PREFIX}onUpdate`]) {\n      sourceObj[`${FIELDS_PREFIX}onUpdate`] = [\n        ...sourceObj[`${FIELDS_PREFIX}onUpdate`], \n        (updatedProperty: string, value: unknown) => {\n          if (propertyName === updatedProperty) {\n            resolve(value as T); \n            sourceObj[`${FIELDS_PREFIX}onUpdate`][index] = null;\n\n            if (sourceObj[`${FIELDS_PREFIX}onUpdate`].every((i) => i ===  null))\n              sourceObj[`${FIELDS_PREFIX}onUpdate`] = [];\n          }\n        }\n      ];\n    }\n  });\n}\n"],
-  "mappings": ";;;;;AAEO,IAAM,QAAQ,CAAU,WAAc,iBAAqC;AAChF,QAAM,QAAQ,UAAU,GAAG,aAAa,UAAU,GAAG,UAAU;AAE/D,SAAO,IAAI,QAAQ,CAAC,YAAY;AAC9B,QAAI,UAAU,GAAG,aAAa,UAAU,GAAG;AACzC,gBAAU,GAAG,aAAa,UAAU,IAAI;AAAA,QACtC,GAAG,UAAU,GAAG,aAAa,UAAU;AAAA,QACvC,CAAC,iBAAyB,UAAmB;AAC3C,cAAI,iBAAiB,iBAAiB;AACpC,oBAAQ,KAAU;AAClB,sBAAU,GAAG,aAAa,UAAU,EAAE,KAAK,IAAI;AAE/C,gBAAI,UAAU,GAAG,aAAa,UAAU,EAAE,MAAM,CAAC,MAAM,MAAO,IAAI;AAChE,wBAAU,GAAG,aAAa,UAAU,IAAI,CAAC;AAAA,UAC7C;AAAA,QACF;AAAA,MACF;AAAA,IACF;AAAA,EACF,CAAC;AACH;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../packages/setupTests.js"],
-  "sourcesContent": ["import '@testing-library/jest-dom';\n"],
-  "mappings": ";AAAA,OAAO;",
-  "names": []
-}
