@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "lib": ["ESNext"],
+    "lib": ["dom"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "declaration": true,

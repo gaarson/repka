@@ -241,33 +241,35 @@ describe('Direct Access (Hook) Integration', () => {
   //   errorSpy.mockRestore();
   // });
 
-  test('Hook: PROVES the silent bug on unstable hook order', () => {
+  test('Hook: CRASHES LOUDLY on unstable hook order', () => {
     const childStore = repka({ val: 10 });
     const parentStore = repka({ child: childStore });
 
     const MyComponent = ({ show }) => {
-      React.useState(0); // Хук №1
+      React.useState(0);
       let val = 'default';
       if (show) {
-        val = parentStore.child.val; 
+        val = parentStore.child.val;
       }
       return <div>{val}</div>;
     };
 
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    const { rerender, getByText, queryByText } = render(<MyComponent show={false} />);
+    const { rerender, getByText } = render(<MyComponent show={false} />);
     expect(getByText('default')).toBeInTheDocument();
 
-    rerender(<MyComponent show={true} />);
-    expect(getByText('10')).toBeInTheDocument(); 
+    expect(() => {
+      rerender(<MyComponent show={true} />);
+    }).toThrow(
+      '[Repka CRITICAL ERROR in <MyComponent>]'
+    );
+    
+    expect(errorSpy).toHaveBeenCalled();
 
-    act(() => {
-      parentStore.child.val = 99;
-    });
-
-    expect(getByText('10')).toBeInTheDocument(); 
-    expect(queryByText('99')).not.toBeInTheDocument(); 
+    expect(errorSpy.mock.calls[0][0]).toContain(
+      'React has detected a change in the order of Hooks'
+    );
 
     errorSpy.mockRestore();
   });
