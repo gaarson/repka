@@ -255,6 +255,31 @@ When you update `childStore.text` directly, `MyComponent` will correctly re-rend
 
 2.  **Direct Access (`store.prop`):** This is an advanced shortcut. When the `Proxy`'s `get` handler detects it's _not_ inside a `Reaction.track()` call, it instead invokes a React hook: `useSyncExternalStore`. This creates a granular subscription _only_ to that specific property. This is why it's subject to the Rules of Hooks.
 
+3.  **Error Resilience for Hook-Based Access:**  
+    When using direct property access (`store.prop`), Repka proactively handles React hook rule violations through a sophisticated error mitigation system:
+    - **Spam Hash Precomputation:**  
+      During library initialization, Repka intentionally triggers common React hook errors (like "Invalid hook call") in isolated test components. It captures the error message, normalizes it (removing prefixes like "Error:"), and computes a 32-bit hash of the first 200 characters. This `KNOWN_SPAM_HASH` is stored for both server (SSR) and client environments.
+    - **Safe Error Handling in Getters:**  
+      In `simpleReactProvider` (the getter handler), when an error occurs during hook execution:
+      1.  The error message is normalized and hashed
+      2.  The hash is compared against `KNOWN_SPAM_HASH`
+      3.  **If matched:** The error is treated as non-critical "development spam". Repka safely falls back to returning the current raw property value, preventing crashes while still showing React's warning in console.
+      4.  **If unmatched:** Repka throws a loud `Repka CRITICAL ERROR` containing:
+          - The rendering component's name
+          - Known vs. actual error hashes for diagnostics
+          - Full original error details
+          - Clear explanation about preventing "zombie components"
+    - **Zombie Component Prevention:**  
+      For non-spam errors (e.g., "Rendered more hooks than during previous render"), Repka _intentionally crashes_ with a detailed error rather than allowing corrupted UI states. This fails fast to prevent subtle data corruption issues that are extremely hard to debug.
+    - **Context Detection:**  
+      The getter first checks if it's executing within React's render cycle using internal React flags (`__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED`). If not in a render context, it bypasses hooks entirely and returns raw values.
+
+    This mechanism ensures:
+    - 🛡️ Development warnings don't crash production apps
+    - 🚨 Critical errors fail loudly with actionable diagnostics
+    - ⚡ Zero performance overhead for successful hook executions
+    - 🌐 Consistent behavior across SSR and client environments
+
 ---
 
 ## ⛔️ Known Limitations

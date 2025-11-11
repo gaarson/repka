@@ -24,11 +24,9 @@ async function getExpectedClientHash(): Promise<string> {
     document.body.appendChild(tempDiv);
     const root = createRoot(tempDiv);
 
-    // Глушим ТОЛЬКО console.error, чтобы React не писал в stderr
     const originalConsoleError = console.error;
     console.error = () => {};
 
-    // 2. Создаем Error Boundary, который поймает ошибку и вернет хеш
     class TestBoundary extends React.Component {
       state: any
       constructor(props: any) {
@@ -44,7 +42,7 @@ async function getExpectedClientHash(): Promise<string> {
         const cleanMessage = cleanErrorMessage(error.message);
         const hash = simpleHash(cleanMessage.substring(0, 200));
 
-        console.error = originalConsoleError; // Восстанавливаем
+        console.error = originalConsoleError;
         setTimeout(() => {
           root.unmount();
           tempDiv.remove();
