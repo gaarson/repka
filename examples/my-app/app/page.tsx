@@ -1,6 +1,6 @@
 'use client'
 
-// import { useState } from "react";
+import { useState } from "react";
 import { repka } from "repka";
 
 class State {
@@ -31,8 +31,7 @@ const Button = ({ onClick }: { onClick: () => void }) => {
 };
 
 const MagicButton = state(() => {
-  // const [cond, setCond] = useState(true);
-return;
+  const [cond, setCond] = useState(true);
   return (
     <div>
       <button onClick={() => setCond(c => !c)}>Toggle Magic</button>
@@ -42,7 +41,18 @@ return;
 })
 
 const Home = state(() => {
-  const some = state.foo ? 'aa' : 'bb';
+  const [condition, setCondition] = useState(true);
+  
+  const [one, setOne] = useState(1);
+
+  let some;
+  if (condition) {
+    some = state.foo ? 'aa' : 'bb';
+  }
+
+  const [two, setTwo] = useState(2);
+
+  const [three, setThree] = useState(3);
 
   const { puk } = state;
 
@@ -54,10 +64,11 @@ const Home = state(() => {
       <button 
         onClick={() => {
           state.foo += 1;
+          setCondition(c => !c) 
         }} 
         style={{ color: 'red', margin: '10px' }}
       >
-        Click me to BREAK React (condition: {String(9)})
+        Click me to BREAK React (condition: {String(condition)})
       </button>
 
       {/* Твои кнопки */}

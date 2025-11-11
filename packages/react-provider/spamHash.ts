@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react';
 import { simpleHash } from './stringHash';
 
@@ -22,6 +24,42 @@ const cleanErrorMessage = (message: string | Event): string => {
   return str;
 };
 
+class SpamTestBoundary extends React.Component<
+  { children: React.ReactNode; onHashCaught: (hash: string) => void },
+  { hasError: boolean }
+> {
+  state: any;
+  props: any;
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    const cleanMessage = cleanErrorMessage(error.message);
+    const isTheSpamError =
+      cleanMessage.includes('Invalid hook call') ||
+      cleanMessage.includes('Minified React error');
+
+    if (isTheSpamError) {
+      const hash = simpleHash(cleanMessage.substring(0, 200));
+      KNOWN_SPAM_HASH = hash; 
+      this.props.onHashCaught(hash);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
+
 export async function runServerCheck() {
   const { renderToString } = await import('react-dom/server');
 
@@ -36,20 +74,20 @@ export async function runServerCheck() {
   return new Promise(resolve => {
     const originalConsoleError = console.error;
 
-    const TIMEOUT = 100; 
+    const TIMEOUT = 100;
 
     console.error = (message: any, ...optionalParams: any[]) => {
       const errorString = typeof message === 'string' ? message : String(message);
-      const isTargetError = errorString.includes('Invalid hook call') || 
-                            errorString.includes('Minified React error'); 
+      const isTargetError = errorString.includes('Invalid hook call') ||
+                            errorString.includes('Minified React error');
 
       if (isTargetError && !KNOWN_SPAM_HASH) {
         const cleanMessage = cleanErrorMessage(errorString);
         KNOWN_SPAM_HASH = simpleHash(cleanMessage.substring(0, 200));
-        
+
         console.error = originalConsoleError;
-        resolve(KNOWN_SPAM_HASH); 
-        return; 
+        resolve(KNOWN_SPAM_HASH);
+        return;
       }
 
       originalConsoleError(message, ...optionalParams);
@@ -57,13 +95,13 @@ export async function runServerCheck() {
 
     try {
       renderToString(React.createElement(ServerBrokenComponent));
-      
+
       setTimeout(() => {
         if (!KNOWN_SPAM_HASH) {
           console.error = originalConsoleError;
           resolve(false);
         }
-      }, TIMEOUT); 
+      }, TIMEOUT);
 
     } catch (error) {
       console.error = originalConsoleError;
@@ -73,124 +111,99 @@ export async function runServerCheck() {
 }
 
 export async function runClientCheck() {
+  let root: any = null; // Выносим, чтобы cleanup имел доступ
+  let tempDiv: HTMLDivElement | null = null; // Выносим
+  let originalConsoleError: typeof console.error | null = null;
+  let originalWindowOnError: OnErrorEventHandler | null = null;
+
+  const cleanup = () => {
+    if (originalConsoleError) {
+      console.error = originalConsoleError;
+    }
+    if (originalWindowOnError) {
+      window.onerror = originalWindowOnError;
+    }
+
+    setTimeout(() => {
+      try {
+        if (root) {
+          root.unmount();
+        }
+        if (tempDiv) {
+          tempDiv.remove();
+        }
+      } catch (e) {
+      }
+    }, 0);
+  };
+
   try {
     const { createRoot } = await import('react-dom/client');
 
-    const tempDiv = document.createElement('div');
+    tempDiv = document.createElement('div');
     tempDiv.id = 'react-error-test-rig';
     tempDiv.style.display = 'none';
     document.body.appendChild(tempDiv);
-    const root = createRoot(tempDiv);
+    root = createRoot(tempDiv);
 
-    const originalConsoleError = console.error;
-    const originalOnError = window.onerror;
-    const originalOnUnhandledRejection = window.onunhandledrejection;
-
-    (window as any).__IS_REACT_SPAM_TEST__ = false;
-
-    const cleanup = () => {
-      setTimeout(() => {
-        (window as any).__IS_REACT_SPAM_TEST__ = false;
-
-        window.removeEventListener('error', errorListener, { capture: true });
-        window.removeEventListener('unhandledrejection', rejectionListener, {
-          capture: true,
-        });
-
-        console.error = originalConsoleError;
-        window.onerror = originalOnError;
-        window.onunhandledrejection = originalOnUnhandledRejection;
-
-        try {
-          root.unmount();
-          tempDiv.remove();
-        } catch (e) {}
-      }, 0);
-    };
-
-    const errorListener = (event: ErrorEvent) => {
-      if (!(window as any).__IS_REACT_SPAM_TEST__) {
-        return;
-      }
-
-      const cleanMessage = cleanErrorMessage(event.message);
-      const isTheSpamError =
-        cleanMessage.includes('Invalid hook call') ||
-        cleanMessage.includes('Minified React error');
-
-      if (isTheSpamError) {
-        const hash = simpleHash(cleanMessage.substring(0, 200));
-        KNOWN_SPAM_HASH = hash;
-
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        event.stopPropagation();
-
-        cleanup();
-        return false;
-      }
-    };
-
-    const rejectionListener = (event: PromiseRejectionEvent) => {
-      if (!(window as any).__IS_REACT_SPAM_TEST__) {
-        return;
-      }
-
-      const reason = event.reason?.message || event.reason?.toString() || '';
-      const cleanMessage = cleanErrorMessage(reason);
-
-      const isTheSpamError =
-        cleanMessage.includes('Invalid hook call') ||
-        cleanMessage.includes('Minified React error #321');
-
-      if (isTheSpamError) {
-        const hash = simpleHash(cleanMessage.substring(0, 200));
-        KNOWN_SPAM_HASH = hash;
-
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        event.stopPropagation();
-
-        cleanup();
-      }
-    };
-
-    window.addEventListener('error', errorListener, { capture: true });
-    window.addEventListener('unhandledrejection', rejectionListener, {
-      capture: true,
-    });
-
+    originalConsoleError = console.error;
     console.error = () => {};
 
-    window.onerror = function () {
-      if ((window as any).__IS_REACT_SPAM_TEST__) {
+    originalWindowOnError = window.onerror;
+    window.onerror = (message, source, lineno, colno, error) => {
+      const msg = message.toString();
+      if (
+        msg.includes('Invalid hook call') ||
+        msg.includes('Minified React error')
+      ) {
         return true;
       }
-      return originalOnError
-        ? originalOnError.apply(window, arguments as any)
-        : false;
-    };
 
-    window.onunhandledrejection = (event) => {
-      if ((window as any).__IS_REACT_SPAM_TEST__) {
-        return true;
+      if (originalWindowOnError) {
+        return originalWindowOnError.call(
+          window,
+          message,
+          source,
+          lineno,
+          colno,
+          error
+        );
       }
-      return originalOnUnhandledRejection
-        ? originalOnUnhandledRejection.apply(window, [event])
-        : false;
+      return false;
     };
-    (window as any).__IS_REACT_SPAM_TEST__ = true;
 
-    root.render(React.createElement(BrokenComponent));
+    await new Promise<void>((resolve) => {
+      const handleHashCaught = (hash: string) => {
+        console.log(`[SPAM HASH SCRIPT] Client hash caught: ${hash}`);
+        cleanup();
+        resolve();
+      };
+
+      const testApp = React.createElement(
+        SpamTestBoundary,
+        { onHashCaught: handleHashCaught },
+        React.createElement(BrokenComponent)
+      );
+
+      root.render(testApp);
+
+      setTimeout(() => {
+        if (!KNOWN_SPAM_HASH) {
+          console.error = originalConsoleError!;
+          console.error(
+            '[SPAM HASH SCRIPT] Client check timed out. No hash caught.'
+          );
+          cleanup();
+          resolve();
+        }
+      }, 200);
+    });
   } catch (e: any) {
-    if ((window as any).originalConsoleError) {
-      console.error = (window as any).originalConsoleError;
+    if (originalConsoleError) {
+      console.error = originalConsoleError;
     }
-    if ((window as any).originalOnError) {
-      window.onerror = (window as any).originalOnError;
-    }
-    if ((window as any).originalOnUnhandledRejection) {
-      window.onunhandledrejection = (window as any).originalOnUnhandledRejection;
+    if (originalWindowOnError) {
+      window.onerror = originalWindowOnError;
     }
     console.error(
       `[SPAM HASH SCRIPT] Критическая ошибка (внутри runClientCheck):`,
