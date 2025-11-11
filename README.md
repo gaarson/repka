@@ -327,9 +327,7 @@ Waiting for "foo" to change...
 
 - **Dynamic HOC Dependencies:** The HOC wrapper (`repka(Component)`) only tracks dependencies that are _accessed during the current render_. If a property is behind conditional logic (e.g., `if (show)`), it will only become a dependency _after_ `show` becomes `true` and the component re-renders.
 
-- **React Compiler:** Like all proxy-based state managers that use "magic" (e.g., MobX), the upcoming React Compiler will likely struggle to "see" the dependencies. This is a known trade-off for the DX of direct mutation.
-
----
+- **React Compiler:** work in progress... ---
 
 ## 📚 API Reference
 
