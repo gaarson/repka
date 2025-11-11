@@ -198,7 +198,7 @@ When you click the button, you will **only see "Render StringDisplay"** in the c
 
 ---
 
-## 🧩 Composing Stores (New Feature\!)
+## 🧩 Composing Stores
 
 You can safely nest `repka` stores inside each other. The reactivity will be tracked across stores automatically.
 
