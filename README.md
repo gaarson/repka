@@ -247,6 +247,41 @@ When you update `childStore.text` directly, `MyComponent` will correctly re-rend
 
 ---
 
+## 🧐 Reactivity Outside React: `watch`
+
+You can use the `watch` function to react to changes outside of a React component (e.g., for logging or async logic).
+
+```javascript
+import { repka, watch } from "repka";
+
+const state = repka({ foo: 0 });
+
+const logChanges = async () => {
+  console.log('Waiting for "foo" to change...');
+  const newValue = await watch(state, "foo");
+  console.log(`"foo" changed! New value: ${newValue}`);
+
+  // You can call this in a loop or recursively
+  // logChanges();
+};
+
+// Start the watcher
+logChanges();
+
+// Somewhere in your app...
+setTimeout(() => {
+  state.foo = 1;
+}, 2000);
+
+/*
+Console Output:
+Waiting for "foo" to change...
+"foo" changed! New value: 1
+*/
+```
+
+---
+
 ## 💡 How it Works
 
 `Repka` uses a Proxy-based observable pattern with a dual-subscription mechanism:
@@ -295,39 +330,6 @@ When you update `childStore.text` directly, `MyComponent` will correctly re-rend
 - **React Compiler:** Like all proxy-based state managers that use "magic" (e.g., MobX), the upcoming React Compiler will likely struggle to "see" the dependencies. This is a known trade-off for the DX of direct mutation.
 
 ---
-
-## 🧐 Reactivity Outside React: `watch`
-
-You can use the `watch` function to react to changes outside of a React component (e.g., for logging or async logic).
-
-```javascript
-import { repka, watch } from "repka";
-
-const state = repka({ foo: 0 });
-
-const logChanges = async () => {
-  console.log('Waiting for "foo" to change...');
-  const newValue = await watch(state, "foo");
-  console.log(`"foo" changed! New value: ${newValue}`);
-
-  // You can call this in a loop or recursively
-  // logChanges();
-};
-
-// Start the watcher
-logChanges();
-
-// Somewhere in your app...
-setTimeout(() => {
-  state.foo = 1;
-}, 2000);
-
-/*
-Console Output:
-Waiting for "foo" to change...
-"foo" changed! New value: 1
-*/
-```
 
 ## 📚 API Reference
 
