@@ -2,34 +2,10 @@ import React from 'react';
 import { FIELDS_PREFIX } from 'core/domain';
 import { REACTION_STACK } from 'reaction';
 
-import { simpleHash } from './stringHash';
+import { hashUtils } from './stringHash';
 import { getRenderingComponentName } from './getComponentName';
-import { KNOWN_SPAM_HASH } from './spamHash';
-
-export function createRepkaError(
-  originalError: unknown,
-  componentName: string,
-  spamHash: string | null,
-  errorHash: string
-): Error {
-  const isError = originalError instanceof Error;
-  const message = isError ? originalError.message : String(originalError);
-
-  const repkaError = new Error(
-    `[Repka CRITICAL ERROR in <${componentName}>] \n\n` +
-    `Repka's magic getter (store.prop) caught an UNKNOWN React error. \n` +
-    `This is NOT the expected 'Invalid hook call' spam. \n` +
-    `(Known Spam Hash: ${spamHash}, This Error Hash: ${errorHash}) \n\n` +
-    `This is likely a CRITICAL React error (e.g., 'Rendered more hooks...'). \n` +
-    `Repka is crashing LOUDLY to prevent a "zombie component". \n\n` +
-    `Original error: \n` +
-    `> ${message}`
-  );
-
-  // @ts-ignore
-  repkaError.cause = originalError;
-  return repkaError;
-}
+import { createRepkaError } from './domain';
+import { getIsHashReady, getKnownSpamHash, PENDING_ERRORS } from './spamHash';
 
 export const simpleHook = <T extends object>(context: T, prop: keyof T): T[keyof T] => {
   const useSync = React.useSyncExternalStore;
@@ -127,18 +103,25 @@ export function simpleReactProvider<T extends object>(this: T, prop: keyof T): T
   try {
     return simpleHook<T>(this, prop);
   } catch (e) {
-    if (!(e instanceof Error)) {
-      throw e;
-    }
-
     const messageToHash = e.message.substring(0, 200);
-    const messageHash = simpleHash(messageToHash);
+    const messageHash = hashUtils.simpleHash(messageToHash);
 
-    if (KNOWN_SPAM_HASH && messageHash === KNOWN_SPAM_HASH) {
-      return this[`${FIELDS_PREFIX}data`][prop];
-    }
+    const isHashReady = getIsHashReady();
+    const knownHash = getKnownSpamHash();
+
+    if (isHashReady) {
+        if (knownHash && messageHash === knownHash) {
+          return this[`${FIELDS_PREFIX}data`][prop];
+        }
+        
+        const componentName = getRenderingComponentName();
+        throw createRepkaError(e, componentName, knownHash, messageHash);
     
-    const componentName = getRenderingComponentName();
-    throw createRepkaError(e, componentName, KNOWN_SPAM_HASH, messageHash);
+    } else {
+        const componentName = getRenderingComponentName();
+        PENDING_ERRORS.push({ error: e, hash: messageHash, component: componentName });
+
+        return this[`${FIELDS_PREFIX}data`][prop];
+    } 
   }
 }

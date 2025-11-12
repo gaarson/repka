@@ -2,6 +2,12 @@ import React from 'react';
 import {render, act, fireEvent} from '@testing-library/react';
 
 import { repka } from '../../repka';
+
+import { 
+  __SET_SPAM_HASH_FOR_TESTS__,
+  PENDING_ERRORS,
+} from '../spamHash';
+import { hashUtils } from '../stringHash';
 import { createSource } from '../../core/index';
 import { simpleReactProvider } from '../index';
 import { FIELDS_PREFIX } from '../../core/domain';
@@ -273,4 +279,150 @@ describe('Direct Access (Hook) Integration', () => {
 
     errorSpy.mockRestore();
   });
+});
+
+jest.mock('../stringHash', () => ({
+  ...jest.requireActual('../stringHash'),
+  simpleHash: jest.fn(),
+}));
+
+describe('Repka Gateway Logic (Spam Filter)', () => {
+  let REAL_SPAM_HASH;
+  let FAKE_ERROR_HASH;
+  let consoleErrorSpy;
+  let consoleLogSpy;
+
+  beforeEach(() => {
+    const originalHashFn = jest.requireActual('../stringHash').hashUtils.simpleHash;
+
+    const REAL_SPAM_MESSAGE = 'Rendered more hooks than during the previous render.';
+    REAL_SPAM_HASH = originalHashFn(REAL_SPAM_MESSAGE.substring(0, 200));
+    const FAKE_ERROR_MESSAGE = 'This is a REAL error, not spam';
+    FAKE_ERROR_HASH = originalHashFn(FAKE_ERROR_MESSAGE.substring(0, 200));
+
+    __SET_SPAM_HASH_FOR_TESTS__(null);
+    PENDING_ERRORS.length = 0;
+
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const originalConsoleError = console.error;
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation((...args: any[]) => {
+      const message = String(args[0]);
+
+      if (message.includes('change in the order of Hooks')) {
+        return;
+      }
+      if (message.includes('[Repka CRITICAL ERROR')) {
+        return;
+      }
+      if (message.includes('The above error occurred in the')) {
+        return;
+      }
+      
+      originalConsoleError(...args);
+    });
+    
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  const SpammyComponent = ({ show }) => {
+    const childStore = repka({ val: 10 });
+    const parentStore = repka({ child: childStore });
+
+    React.useState(0); 
+    let val = 'default';
+    if (show) {
+      val = parentStore.child.val;
+    }
+    return <div>{val}</div>;
+  };
+
+  test('Gateway [CLOSED]: A real error (not spam) should be added to PENDING_ERRORS and then "crash loudly"', () => {
+    const originalHashFn = hashUtils.simpleHash; 
+    jest.spyOn(hashUtils, 'simpleHash').mockImplementation((msg: string) => {
+      if (msg.includes('Rendered more hooks')) {
+        return FAKE_ERROR_HASH
+      }
+      return originalHashFn(msg);
+    });
+
+    const { rerender } = render(<SpammyComponent show={false} />);
+
+    expect(() => {
+      rerender(<SpammyComponent show={true} />);
+    }).not.toThrow(); 
+
+    expect(PENDING_ERRORS.length).toBe(2); 
+    expect(PENDING_ERRORS[0].hash).toBe(FAKE_ERROR_HASH);
+    expect(PENDING_ERRORS[1].hash).toBe(FAKE_ERROR_HASH);
+    
+    // Говорим "шпиону" забыть все, что он слышал до этого (т.е. warning от React)
+    consoleErrorSpy.mockClear(); 
+    
+    expect(consoleErrorSpy).not.toHaveBeenCalled(); // ✅ Теперь пройдет
+
+    act(() => {
+      __SET_SPAM_HASH_FOR_TESTS__(REAL_SPAM_HASH);
+    });
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('[Repka CRITICAL ERROR')
+      })
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(2);
+
+    expect(PENDING_ERRORS.length).toBe(0); 
+  });
+
+  test('Gateway [CLOSED]: A spam error should be added to PENDING_ERRORS and then be silently dismissed', () => {   
+    const { rerender } = render(<SpammyComponent show={false} />);
+
+    expect(() => {
+      rerender(<SpammyComponent show={true} />);
+    }).not.toThrow();
+
+    expect(PENDING_ERRORS.length).toBe(2); 
+    expect(PENDING_ERRORS[0].hash).toBe(REAL_SPAM_HASH);
+    expect(PENDING_ERRORS[1].hash).toBe(REAL_SPAM_HASH);
+    
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+
+    act(() => {
+      __SET_SPAM_HASH_FOR_TESTS__(REAL_SPAM_HASH);
+    });
+    
+    consoleErrorSpy.mockClear(); 
+
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+    expect(PENDING_ERRORS.length).toBe(0);
+  });
+
+  test('Gateway [OPEN]: A real error should "crash loudly" SYNCHRONOUSLY', () => {
+    __SET_SPAM_HASH_FOR_TESTS__('SOME_OTHER_HASH');
+
+    const { rerender } = render(<SpammyComponent show={false} />);
+    
+    expect(() => {
+      rerender(<SpammyComponent show={true} />);
+    }).toThrow('[Repka CRITICAL ERROR'); 
+
+    expect(PENDING_ERRORS.length).toBe(0);
+  });
+
+  test('Gateway [OPEN]: A spam error should be "swallowed" SYNCHRONOUSLY', () => {
+    __SET_SPAM_HASH_FOR_TESTS__(REAL_SPAM_HASH);
+
+    const { rerender } = render(<SpammyComponent show={false} />);
+    
+    expect(() => {
+      rerender(<SpammyComponent show={true} />);
+    }).not.toThrow(); 
+
+    expect(PENDING_ERRORS.length).toBe(0);
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
 });

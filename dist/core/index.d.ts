@@ -5,4 +5,4 @@ export interface ISource<T, P> {
 export declare const createSource: <T extends {}, O extends {
     main?: (...args: any[]) => any;
     getter?: (...args: any[]) => any;
-}>(data: T, { main, getter }: O) => T & ICallable<ReturnType<O["main"]>, Parameters<O["main"]>>;
+} = {}>(data: T, { main, getter }: O) => T & ICallable<ReturnType<O["main"]>, Parameters<O["main"]>>;

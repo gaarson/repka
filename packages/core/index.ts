@@ -82,7 +82,7 @@ function getAllMethodNames(toCheck: {[key: string]: unknown}) {
 
 export const createSource = <
   T extends {},
-  O extends {main?: (...args: any[]) => any, getter?: (...args: any[]) => any}
+  O extends {main?: (...args: any[]) => any, getter?: (...args: any[]) => any} = {}
 >(
   data: T,
   {main, getter}: O
