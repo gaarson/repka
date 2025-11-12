@@ -347,7 +347,3 @@ An async function to react to state changes outside of a React component.
 - **Returns:** A `Promise` that resolves with the new value as soon as the specified property changes.
 
 <!-- end list -->
-
-```
-
-```
