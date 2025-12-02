@@ -95,12 +95,23 @@ export const createSource = <
         key => key !== 'constructor' && typeof data[key] === 'function' ? true : false
       )
     );
-    const obj = Object.keys(data).reduce((acc, key) => {
-      if (methodsKeys.has(key)) return acc
 
-      acc[key] = data[key]
+    const obj = Object.keys(data).reduce((acc, key) => {
+      if (methodsKeys.has(key)) return acc;
+
+      if (key === 'name') {
+        Object.defineProperty(acc, key, {
+          value: data[key],
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
+      } else {
+        acc[key] = data[key];
+      }
+      
       return acc;
-    }, callableObj)
+    }, callableObj);
 
     const proxy: T & ICallable<ReturnType<O['main']>, Parameters<O['main']>> = new Proxy(obj, {set, get: get.bind(this)});
 

@@ -77,7 +77,14 @@ export function runServerCheck(): Promise<string | false> {
         resolve(false);
       }).catch(reject);
 
-      renderToString(React.createElement(BrokenComponent));
+      const originalConsoleError = console.error;
+      console.error = () => {};
+
+      try {
+        renderToString(React.createElement(BrokenComponent));
+      } finally {
+        console.error = originalConsoleError;
+      }
 
     } catch (error) {
       reject(error);
