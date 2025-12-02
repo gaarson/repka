@@ -7,10 +7,12 @@ class State {
   foo = 0
   bar = 'str'
   puk = 'poo'
+  name = 'AAAAAAAAAAAA'
   obj = { puk: { bar: {foo: 'foo_string', num: 123} } }
 
   toDo() {
     console.log('INCREMENT FOO')
+    this.name = "AAA"
     this.foo = this.foo + 1;
   } 
   toDoWithObj() {
@@ -59,6 +61,8 @@ const Home = state(() => {
   return (
     <div>
       <h1>REPKA + NEXT</h1>
+
+      <h3>{state.name}</h3>
       
       <h3>{some}</h3>
       <button 

@@ -24,17 +24,6 @@ export function getSpamHash() {
   return KNOWN_SPAM_HASH;
 }
 export const store = createSource({ err: null }, {});
-const BrokenComponent = () => {
-  const func = async () => {
-    const ref = await import('react')
-    ref?.useSyncExternalStore()
-  }
-  func().catch((err) => {
-    store.err = err
-  }).catch(() => {});
-
-  return null;
-};
 
 function processPendingErrors() {
     if (!KNOWN_SPAM_HASH) return; 
@@ -58,6 +47,16 @@ const cleanErrorMessage = (message: string | Event): string => {
 };
 
 export function runServerCheck(): Promise<string | false> {
+  class BrokenComponent extends React.Component {
+    render() {
+      React.useSyncExternalStore(
+          () => () => {}, 
+          () => null, 
+          () => null
+      );
+      return null;
+    }
+  }
   return new Promise(async (resolve, reject) => {
     const { renderToString } = await import('react-dom/server');
 
@@ -82,10 +81,13 @@ export function runServerCheck(): Promise<string | false> {
 
       try {
         renderToString(React.createElement(BrokenComponent));
+      } catch (e) {
+        if (!store.err) {
+             store.err = e;
+        }
       } finally {
         console.error = originalConsoleError;
       }
-
     } catch (error) {
       reject(error);
     }
@@ -93,6 +95,18 @@ export function runServerCheck(): Promise<string | false> {
 }
 export async function runClientCheck() {
   try {
+    const BrokenComponent = () => {
+      const func = async () => {
+        const ref = await import('react')
+        ref?.useSyncExternalStore()
+      }
+      func().catch((err) => {
+        store.err = err
+      }).catch(() => {});
+
+      return null;
+    };
+
     const { createRoot } = await import('react-dom/client');
 
     const tempDiv = document.createElement('div');

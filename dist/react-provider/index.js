@@ -1,1 +1,1 @@
-import{a,b}from"../chunks/LZZGUOR2.chunk.js";import"../chunks/LGHY6XNV.chunk.js";import"../chunks/FPE4A7JY.chunk.js";import"../chunks/OIJWQ22T.chunk.js";import"../chunks/FT6P4UXX.chunk.js";import"../chunks/O3VCMV5J.chunk.js";export{a as simpleHook,b as simpleReactProvider};
+import{a,b}from"../chunks/EG57K5XF.chunk.js";import"../chunks/LGHY6XNV.chunk.js";import"../chunks/AP6RJW3C.chunk.js";import"../chunks/TQUNGZOH.chunk.js";import"../chunks/FT6P4UXX.chunk.js";import"../chunks/O3VCMV5J.chunk.js";export{a as simpleHook,b as simpleReactProvider};
