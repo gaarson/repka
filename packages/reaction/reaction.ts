@@ -1,8 +1,8 @@
-import { FIELDS_PREFIX } from "core/domain";
+import { SYMBOLS } from "core/domain";
 import { REACTION_STACK } from "reaction";
 
 type Store = {
-  [`__REPO__onUpdate`]?: ((prop: string, value: unknown, obj: any) => void)[];
+  [SYMBOLS.onUpdate]: ((prop: string, value: unknown, obj: any) => void)[];
 };
 
 export class Reaction {
@@ -19,9 +19,10 @@ export class Reaction {
   track<T>(fn: () => T): T {
     if (this.isDisposed) return fn();
 
-    for (const props of this.dependencies.values()) {
-      props.clear();
+    for (const store of this.dependencies.keys()) {
+       this.unsubscribeFromStore(store);
     }
+    this.dependencies.clear();
 
     REACTION_STACK.push(this);
     try {
@@ -38,12 +39,26 @@ export class Reaction {
     if (!deps) {
       deps = new Set();
       this.dependencies.set(store, deps);
-
-      if (store[`${FIELDS_PREFIX}onUpdate`].indexOf(this.onUpdate) === -1) {
-        store[`${FIELDS_PREFIX}onUpdate`].push(this.onUpdate);
-      }
+      this.subscribeToStore(store);
     }
     deps.add(prop);
+  }
+
+  private subscribeToStore(store: Store) {
+    const onUpdateArr = store[SYMBOLS.onUpdate];
+    if (onUpdateArr && onUpdateArr.indexOf(this.onUpdate) === -1) {
+      onUpdateArr.push(this.onUpdate);
+    }
+  }
+
+  private unsubscribeFromStore(store: Store) {
+    const onUpdateArr = store[SYMBOLS.onUpdate];
+    if (onUpdateArr) {
+      const index = onUpdateArr.indexOf(this.onUpdate);
+      if (index > -1) {
+        onUpdateArr.splice(index, 1);
+      }
+    }
   }
 
   private onUpdate = (updatedProp: string, value: unknown, store: Store) => {
@@ -54,23 +69,25 @@ export class Reaction {
   }
 
   updateScheduler(scheduler: () => void) {
-    this.scheduler = scheduler;
-  }
+    this.scheduler = scheduler;
+  }
+
   undispose() {
-    this.isDisposed = false;
-  }
+    if (!this.isDisposed) return;
+    this.isDisposed = false;
+    
+    for (const store of this.dependencies.keys()) {
+      this.subscribeToStore(store);
+    }
+  }
 
   dispose() {
     if (this.isDisposed) return;
 
     for (const store of this.dependencies.keys()) {
-      const index = store[`${FIELDS_PREFIX}onUpdate`].indexOf(this.onUpdate);
-      if (index > -1) {
-        store[`${FIELDS_PREFIX}onUpdate`].splice(index, 1);
-      }
+      this.unsubscribeFromStore(store);
     }
-    this.dependencies.clear();
+    
     this.isDisposed = true;
   }
 }
-

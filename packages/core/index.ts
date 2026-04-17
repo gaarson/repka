@@ -1,83 +1,82 @@
-import {ICallable, Callable, SPECIAL_KEY, FIELDS_PREFIX} from './domain';
+import { SYMBOLS, SPECIAL_KEY, createCallable, ICallable } from './domain';
 
-function get(obj, prop) {
-  if (
-    obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY)
-    && prop !== obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY)
-    && (typeof prop === 'string' && !prop.startsWith(FIELDS_PREFIX))
-    && !obj[`${FIELDS_PREFIX}methods`][prop]
-  ) {
-    const currentKey = obj[`${FIELDS_PREFIX}muppet`].get(SPECIAL_KEY);
-    obj[`${FIELDS_PREFIX}muppet`].set(currentKey, false);
-    
-    const currentFields = obj[`${FIELDS_PREFIX}criticalFields`].get(currentKey) || [];
-    obj[`${FIELDS_PREFIX}criticalFields`].set(currentKey, [...new Set([
-      ...currentFields,
-      prop
-    ])]);
+function get(target: any, prop: string | symbol) {
+  if (typeof prop === 'symbol') return target[prop];
+  if (prop === '__call') return target[SYMBOLS.call];
+
+  const muppet = target[SYMBOLS.muppet];
+  const currentKey = muppet.get(SPECIAL_KEY);
+  const methods = target[SYMBOLS.methods]; // Кэшируем доступ
+
+  // Логика подписки
+  if (currentKey !== undefined && prop !== currentKey) {
+    if (!methods[prop]) {
+      muppet.set(currentKey, false);
+
+      const criticalFields = target[SYMBOLS.criticalFields];
+      let fields = criticalFields.get(currentKey);
+      if (!fields) {
+        fields = new Set();
+        criticalFields.set(currentKey, fields);
+      }
+      fields.add(prop);
+    }
   }
-  if ((typeof prop === 'string' && prop.startsWith(FIELDS_PREFIX)) || prop === '__call') {
-    return obj[prop]
-  }
-  if (obj[`${FIELDS_PREFIX}methods`][prop]) return obj[`${FIELDS_PREFIX}methods`][prop];
 
-  if (obj[`${FIELDS_PREFIX}getter`]) return obj[`${FIELDS_PREFIX}getter`](prop);
+  if (methods[prop]) return methods[prop];
 
-  return obj[`${FIELDS_PREFIX}data`][prop];
+  const getter = target[SYMBOLS.getter];
+  if (getter) return getter(prop);
+
+  return target[SYMBOLS.data][prop];
 }
 
-const set = (obj, prop, value, receiver): boolean => {
-  if ((typeof prop === 'string' && prop.startsWith(FIELDS_PREFIX)) || prop === '__call') {
-    obj[prop] = value;
+const set = (target: any, prop: string | symbol, value: any, receiver: any): boolean => {
+  if (typeof prop === 'symbol' || prop === '__call') {
+    target[prop === '__call' ? SYMBOLS.call : prop] = value;
     return true;
   }
 
-  if (!obj[`${FIELDS_PREFIX}methods`][prop]) {
-    obj[`${FIELDS_PREFIX}data`] = {
-      ...obj[`${FIELDS_PREFIX}data`],
-      [prop]: value
-    };
+  if (!target[SYMBOLS.methods][prop]) {
+    target[SYMBOLS.data][prop] = value;
 
-    if (obj[`${FIELDS_PREFIX}listeners`][prop] && obj[`${FIELDS_PREFIX}listeners`][prop].size) {
-      obj[`${FIELDS_PREFIX}listeners`][prop].forEach((notify, key) => {
-        if (obj[`${FIELDS_PREFIX}muppet`].has(key)
-            && obj[`${FIELDS_PREFIX}muppet`].get(key) === false) {
-          obj[`${FIELDS_PREFIX}muppet`].set(key, true);
+    const listeners = target[SYMBOLS.listeners];
+    const propListeners = listeners[prop];
+    
+    if (propListeners && propListeners.size > 0) {
+      const muppet = target[SYMBOLS.muppet];
+      propListeners.forEach((notify: any, key: any) => {
+        if (muppet.has(key) && muppet.get(key) === false) {
+          muppet.set(key, true);
         }
-
         notify();
       });
     }
-    if (obj[`${FIELDS_PREFIX}onUpdate`].length) {
-      obj[`${FIELDS_PREFIX}onUpdate`].forEach(
-        (fn: (...args: any[]) => void) => fn && fn(prop, value, receiver)
-      );
+
+    const onUpdate = target[SYMBOLS.onUpdate];
+    const onUpdateLength = onUpdate.length;
+    if (onUpdateLength > 0) {
+      // Классический цикл for работает быстрее в V8 для массивов коллбэков
+      for (let i = 0; i < onUpdateLength; i++) {
+        const fn = onUpdate[i];
+        if (fn) fn(prop, value, receiver);
+      }
     }
   }
 
   return true;
 }
 
-export interface ISource<T, P> {
-  <DataType = T, Provider = P >( data: DataType, provider?: Provider): DataType;
-}
-
 function getAllMethodNames(toCheck: {[key: string]: unknown}) {
-  const props = [];
+  const props: string[] = [];
   let obj = toCheck;
   do {
     props.push(...Object.getOwnPropertyNames(obj));
   } while (obj = Object.getPrototypeOf(obj));
-  
-  return props.sort().filter((e, i, arr) => {
-    if (e != arr[i + 1] && typeof toCheck[e] == 'function') {
-       
-      if (`${FIELDS_PREFIX}data` in toCheck[e]) {
-        return false;
-      }
-      return true;
-    } 
-  });
+
+  // Оптимизированная дедупликация через Set вместо filter(e, i, arr)
+  const uniqueProps = Array.from(new Set(props)).sort();
+  return uniqueProps.filter(e => typeof toCheck[e] === 'function');
 }
 
 export const createSource = <
@@ -86,65 +85,69 @@ export const createSource = <
 >(
   data: T,
   {main, getter}: O
-): T & ICallable<ReturnType<O['main']>, Parameters<O['main']>> => {
+): T & ICallable<ReturnType<NonNullable<O['main']>>, Parameters<NonNullable<O['main']>>> => {
   try {
-    const dummyImplementation = (() => {}) as O['main'];
-    const callableObj = new Callable(dummyImplementation);
-    const methodsKeys = new Set(
-      getAllMethodNames(data).filter(
-        key => key !== 'constructor' && typeof data[key] === 'function' ? true : false
-      )
-    );
+    let proxy: any;
+    const callableObj = createCallable(function(this: any, ...args: any[]) {
+      if (proxy && proxy[SYMBOLS.call]) {
+        return proxy[SYMBOLS.call](...args);
+      }
+    }) as any;
 
-    const obj = Object.keys(data).reduce((acc, key) => {
-      if (methodsKeys.has(key)) return acc;
+    const allMethods = getAllMethodNames(data);
+    const methodsKeys = new Set<string>();
+    
+    for (let i = 0; i < allMethods.length; i++) {
+        const key = allMethods[i];
+        if (key !== 'constructor' && !(data as any)[key]?.[SYMBOLS.muppet]) {
+            methodsKeys.add(key);
+        }
+    }
+
+    // Собираем данные без reduce и spread
+    const dataKeys = Object.keys(data);
+    for (let i = 0; i < dataKeys.length; i++) {
+      const key = dataKeys[i];
+      if (methodsKeys.has(key)) continue;
 
       if (key === 'name') {
-        Object.defineProperty(acc, key, {
-          value: data[key],
-          writable: true,
-          enumerable: true,
-          configurable: true,
+        Object.defineProperty(callableObj, key, {
+          value: (data as any)[key], writable: true, enumerable: true, configurable: true,
         });
       } else {
-        acc[key] = data[key];
+        callableObj[key] = (data as any)[key];
       }
-      
-      return acc;
-    }, callableObj);
-
-    const proxy: T & ICallable<ReturnType<O['main']>, Parameters<O['main']>> = new Proxy(obj, {set, get: get.bind(this)});
-
-    const methods = [...methodsKeys].reduce(
-      (prev, curr) => (curr !== 'constructor' && typeof data[curr] === 'function')
-        ? { ...prev, [curr]: data[curr].bind(proxy) }
-        : prev,
-      {} as T
-    );
-    proxy[`${FIELDS_PREFIX}methods`] = methods;
-    proxy[`${FIELDS_PREFIX}onUpdate`] = [];
-    proxy[`${FIELDS_PREFIX}data`] = data;
-    
-    proxy[`${FIELDS_PREFIX}criticalFields`] = new Map();
-    proxy[`${FIELDS_PREFIX}muppet`] = new Map();
-
-    proxy[`${FIELDS_PREFIX}listeners`] = Object.keys(obj).reduce(
-      (prev, key) => !key.startsWith(FIELDS_PREFIX) && key !== '__call'
-        ? ({ ...prev, [key]: new Map() })
-        : prev,
-        {}
-    );
-
-    if (getter) {
-      proxy[`${FIELDS_PREFIX}getter`] = getter.bind(proxy);
     }
 
-    if (main) {
-      proxy.__call = main.bind(proxy);
-    }
+    proxy = new Proxy(callableObj, {set, get: get.bind(this)});
 
-    return proxy;
+    const methods: Record<string, Function> = {};
+    methodsKeys.forEach(curr => {
+         methods[curr] = (data as any)[curr].bind(proxy);
+    });
+
+    proxy[SYMBOLS.methods] = methods;
+    proxy[SYMBOLS.onUpdate] = [];
+    proxy[SYMBOLS.data] = data;
+    proxy[SYMBOLS.criticalFields] = new Map();
+    proxy[SYMBOLS.muppet] = new Map();
+
+    const listeners: Record<string, Map<any, any>> = {};
+    const objKeys = Object.keys(callableObj);
+    for(let i = 0; i < objKeys.length; i++) {
+        const key = objKeys[i];
+        if (typeof key === 'string' && key !== '__call') {
+            listeners[key] = new Map();
+        }
+    }
+    proxy[SYMBOLS.listeners] = listeners;
+
+    if (getter) proxy[SYMBOLS.getter] = getter.bind(proxy);
+    if (main) proxy[SYMBOLS.call] = main.bind(proxy);
+
+    return proxy as any;
   } catch (error) {
     console.error('SOURCE OBJECT ERROR: ', error);
+    throw error;
   }
 };

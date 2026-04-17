@@ -1,10 +1,10 @@
 import { Reaction } from '../reaction';
-import { FIELDS_PREFIX } from 'core/domain';
+import { FIELDS_PREFIX, SYMBOLS } from 'core/domain';
 
 const createMockStore = () => ({
-  [`${FIELDS_PREFIX}onUpdate`]: [],
+  [SYMBOLS.onUpdate]: [],
   simulateUpdate(prop: string) {
-    this[`${FIELDS_PREFIX}onUpdate`].forEach(fn => fn(prop, 'mock_value', this));
+    this[SYMBOLS.onUpdate].forEach(fn => fn(prop, 'mock_value', this));
   }
 });
 
@@ -43,11 +43,11 @@ describe('Reaction class', () => {
 
   test('should stop running scheduler after dispose()', () => {
     reaction.reportDependency(mockStore, 'foo');
-    expect(mockStore[`${FIELDS_PREFIX}onUpdate`].length).toBe(1);
+    expect(mockStore[SYMBOLS.onUpdate].length).toBe(1);
 
     reaction.dispose();
     
-    expect(mockStore[`${FIELDS_PREFIX}onUpdate`].length).toBe(0);
+    expect(mockStore[SYMBOLS.onUpdate].length).toBe(0);
 
     mockStore.simulateUpdate('foo');
     expect(scheduler).not.toHaveBeenCalled();
@@ -56,6 +56,7 @@ describe('Reaction class', () => {
   test('should not report dependency if already disposed', () => {
     reaction.dispose();
     reaction.reportDependency(mockStore, 'foo');
-    expect(mockStore[`${FIELDS_PREFIX}onUpdate`].length).toBe(0);
+    expect(mockStore[SYMBOLS.onUpdate].length).toBe(0);
   });
 });
+

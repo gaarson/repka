@@ -10,7 +10,7 @@ import {
 import { hashUtils } from '../stringHash';
 import { createSource } from '../../core/index';
 import { simpleReactProvider } from '../index';
-import { FIELDS_PREFIX } from '../../core/domain';
+import { FIELDS_PREFIX, SYMBOLS } from '../../core/domain';
 
 const EXPECTED_SIMPLE_STRING = 'string'
 const EXPECTED_SIMPLE_STRING_CHANGED = 'foo';
@@ -155,8 +155,8 @@ describe('create simple provider', () => {
 
     unmount();
 
-    expect(simple[`${FIELDS_PREFIX}criticalFields`]).toMatchObject({});
-    expect(simple[`${FIELDS_PREFIX}muppet`]).toMatchObject({});
+    expect(simple[SYMBOLS.criticalFields]).toMatchObject({});
+    expect(simple[SYMBOLS.muppet]).toMatchObject({});
   });
 
 });

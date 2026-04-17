@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { render, act, fireEvent, screen } from '@testing-library/react';
-import { FIELDS_PREFIX } from '../../core/domain';
+import { FIELDS_PREFIX, SYMBOLS } from '../../core/domain';
 import { repka } from '../../repka';
 
 describe('repka HOC (state(Component))', () => {
@@ -76,11 +76,11 @@ describe('repka HOC (state(Component))', () => {
 
     const { unmount } = render(<MyComponent />);
     
-    expect(state[`${FIELDS_PREFIX}onUpdate`].length).toBe(1);
+    expect(state[SYMBOLS.onUpdate].length).toBe(1);
 
     unmount();
     
-    expect(state[`${FIELDS_PREFIX}onUpdate`].length).toBe(0);
+    expect(state[SYMBOLS.onUpdate].length).toBe(0);
   });
 });
 

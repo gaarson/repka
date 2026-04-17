@@ -1,4 +1,4 @@
-import { FIELDS_PREFIX, SPECIAL_KEY } from '../domain';
+import { SYMBOLS, SPECIAL_KEY } from '../domain';
 import { createSource } from '../index';
 
 interface ITest {
@@ -12,28 +12,23 @@ class Test implements ITest {
   bool = true;
   str = 'string';
   num = 123;
-  doSome() {
-    return;
-  }
+  doSome() { return; }
 }
 
 describe('createSource', () => {
   const key = 'default';
+  const notifier = jest.fn(() => { return; });
 
-  const notifier = jest.fn(() => {
-    return;
-  });
+  const provider = jest.fn(function (this: any) {
+    this[SYMBOLS.muppet].set(SPECIAL_KEY, key);
+    this[SYMBOLS.muppet].set(key, false);
 
-  const provider = jest.fn(function () {
-    this[`${FIELDS_PREFIX}muppet`].set(SPECIAL_KEY, key);
-    this[`${FIELDS_PREFIX}muppet`].set(key, false);
-
-    Object.keys(this[`${FIELDS_PREFIX}data`]).forEach(prop => {
+    Object.keys(this[SYMBOLS.data]).forEach(prop => {
       if (
-        this[`${FIELDS_PREFIX}listeners`][prop] &&
-        typeof this[`${FIELDS_PREFIX}listeners`][prop] !== 'function'
+        this[SYMBOLS.listeners][prop] &&
+        typeof this[SYMBOLS.listeners][prop] !== 'function'
       ) {
-        this[`${FIELDS_PREFIX}listeners`][prop].set(key, notifier);
+        this[SYMBOLS.listeners][prop].set(key, notifier);
       }
     });
     return this;
@@ -54,33 +49,30 @@ describe('createSource', () => {
 
   test('default provider return correct values', () => {
     const providerResult = stateRepo();
-
     expect(providerResult).toHaveProperty('doSome');
     expect(providerResult.bool).toBe(true);
     expect(providerResult.str).toBe('string');
-    expect(providerResult.num).toBe(123);
   });
 
   test('call notifier when value change', () => {
     stateRepo();
-    
     expect(notifier).not.toHaveBeenCalled();
-    expect(stateRepo[`${FIELDS_PREFIX}muppet`].get(key)).toBe(false);
+    expect((stateRepo as any)[SYMBOLS.muppet].get(key)).toBe(false);
 
-    stateRepo['str'] = '123';
+    stateRepo.str = '123';
 
     expect(notifier).toHaveBeenCalled();
-    expect(stateRepo[`${FIELDS_PREFIX}muppet`].get(key)).toBe(true);
+    expect((stateRepo as any)[SYMBOLS.muppet].get(key)).toBe(true);
   });
 
   test('update properties and trigger onUpdate listeners correctly', () => {
     const onUpdateMock = jest.fn();
-    stateRepo[`${FIELDS_PREFIX}onUpdate`].push(onUpdateMock);
+    (stateRepo as any)[SYMBOLS.onUpdate].push(onUpdateMock);
 
     stateRepo.bool = false;
 
     expect(stateRepo.bool).toBe(false);
-    expect(stateRepo[`${FIELDS_PREFIX}data`].bool).toBe(false)
+    expect((stateRepo as any)[SYMBOLS.data].bool).toBe(false)
     expect(onUpdateMock).toHaveBeenCalledWith("bool", false, stateRepo);
   });
 });

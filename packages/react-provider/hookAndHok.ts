@@ -4,33 +4,42 @@ import { Reaction } from 'reaction/reaction';
 import { simpleHook } from './index';
 
 function createHOCWrapper<P extends {}>(
-  store: any, 
-  Component: React.ComponentType
+  store: any,
+  Component: React.ComponentType<P>
 ): React.FC<P> {
   const HOCWrapper: React.FC<P> = (props: P) => {
-    const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+    const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 
-    const reactionRef = React.useRef<Reaction | null>(null);
+    const reactionRef = React.useRef<Reaction | null>(null);
 
-    if (reactionRef.current === null) {
+    if (reactionRef.current === null) {
       const componentName = Component.displayName || Component.name || 'Component';
-      reactionRef.current = new Reaction(`${componentName}_Observer`, forceUpdate);
-    }
+      reactionRef.current = new Reaction(`${componentName}_Observer`, forceUpdate);
+    } else {
+      reactionRef.current.updateScheduler(forceUpdate);
+    }
 
-    reactionRef.current.updateScheduler(forceUpdate);
+    React.useEffect(() => {
+      const reaction = reactionRef.current;
+      if (reaction) {
+        reaction.undispose();
+      }
+      
+      return () => {
+        if (reaction) {
+          reaction.dispose();
+        }
+      };
+    }, []);
 
-    React.useEffect(() => {
-      reactionRef.current.undispose();
-      return () => reactionRef.current.dispose();
-    }, [reactionRef.current]);
-
-    return reactionRef.current.track(() => {
-      return Component(props);
-    });
-  };
+    return reactionRef.current.track(() => {
+      return Component(props);
+    });
+  };
 
   HOCWrapper.displayName = `RepkaObserver(${Component.displayName || Component.name})`;
-  return HOCWrapper;
+  
+  return React.memo(HOCWrapper) as unknown as React.FC<P>;
 }
 
 export function repkaHookAndHoc<T extends object>(
@@ -38,11 +47,16 @@ export function repkaHookAndHoc<T extends object>(
   arg: React.ComponentType<any> | keyof T
 ): React.FC<any> | T[keyof T] {
   try {
-    if (typeof arg !== 'string') return createHOCWrapper<T>(this, arg as React.ComponentType<any>); 
-    else if (arg) return simpleHook<T>(this, arg as keyof T);
-    else console.error(
-      '[Repka] Ошибка вызова хука. Нужно указать либо функциональный компонент либо имя поля за которым хотите следить'
-    );
+    if (typeof arg !== 'string') {
+        return createHOCWrapper<any>(this, arg as React.ComponentType<any>);
+    } else if (arg) {
+        return simpleHook<T>(this, arg as keyof T);
+    } else {
+        console.error(
+            '[Repka] Ошибка вызова хука. Нужно указать либо функциональный компонент, либо имя поля за которым хотите следить.'
+        );
+        return this;
+    }
   } catch (e) {
     console.error('[Repka] Ошибка вызова хука. Убедитесь, что state() вызывается на верхнем уровне компонента.', e);
     return this;

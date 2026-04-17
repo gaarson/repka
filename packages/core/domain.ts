@@ -1,4 +1,15 @@
-export type providerType<DataType = undefined, MethodsObjType = undefined> = () => 
+export const SYMBOLS = {
+  muppet: Symbol('muppet'),
+  criticalFields: Symbol('criticalFields'),
+  methods: Symbol('methods'),
+  data: Symbol('data'),
+  getter: Symbol('getter'),
+  listeners: Symbol('listeners'),
+  onUpdate: Symbol('onUpdate'),
+  call: Symbol('__call'),
+} as const;
+
+export type providerType<DataType = undefined, MethodsObjType = undefined> = () =>
   (MethodsObjType extends object ? [DataType, MethodsObjType] : DataType);
 
 export const SPECIAL_KEY = '__PROVIDER_ID__' as const;
@@ -6,22 +17,11 @@ export const FIELDS_PREFIX = '__REPO__' as const;
 
 export interface ICallable<T, P extends unknown[]> {
   (...args: P): T;
-  __call(...args: P): T;
 }
 
-export interface ICallableConstructor {
-  new <T, P extends unknown[]>(implementation: (...args: P) => T): ICallable<T, P>;
-  prototype: any;
-}
-
-function CallableImplementation(this: any, implementation: (...args: any[]) => any) {
-  const callable = (...args: any[]) => {
-    return callable.__call(...args);
+export function createCallable<T, P extends unknown[]>(implementation: (...args: P) => T): ICallable<T, P> {
+  const callable = function (this: any, ...args: P): T {
+    return implementation.apply(this, args);
   };
-  callable.__call = implementation;
-  Object.setPrototypeOf(callable, new.target.prototype);
-  return callable;
+  return callable as ICallable<T, P>;
 }
-
-export const Callable = CallableImplementation as unknown as ICallableConstructor;
-

@@ -1,6 +1,6 @@
 {
   "name": "repka",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "description": "A simple and powerful state manager for React with selective re-renders",
   "author": "ruser",
   "license": "MIT",
@@ -54,7 +54,7 @@
     }
   },
   "scripts": {
-    "test": "our-scripts test -p packages",
+    "test": "our-scripts test -p packages --ci",
     "build": "our-scripts build -p packages -em -dts",
     "watch": "our-scripts start -p packages -em -dts",
     "test:ssr": "vitest run --config ./vitest.node.config.ts"

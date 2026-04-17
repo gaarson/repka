@@ -12,23 +12,23 @@ export const PENDING_ERRORS: Array<{ error: Error, hash: string, component: stri
 export const getIsHashReady = () => isHashReady;
 export const getKnownSpamHash = () => KNOWN_SPAM_HASH;
 export const __SET_SPAM_HASH_FOR_TESTS__ = (hash: string | null) => {
-  KNOWN_SPAM_HASH = hash;
-  if (hash) {
-    isHashReady = true;
+  KNOWN_SPAM_HASH = hash;
+  if (hash) {
+    isHashReady = true;
     processPendingErrors();
-  } else {
-    isHashReady = false; 
-  }
+  } else {
+    isHashReady = false;
+  }
 }
 export function getSpamHash() {
-  return KNOWN_SPAM_HASH;
+  return KNOWN_SPAM_HASH;
 }
 export const store = createSource({ err: null }, {});
 
 function processPendingErrors() {
-    if (!KNOWN_SPAM_HASH) return; 
+    if (!KNOWN_SPAM_HASH) return;
 
-    isHashReady = true; 
+    isHashReady = true;
 
     while (PENDING_ERRORS.length > 0) {
         const { error, hash, component } = PENDING_ERRORS.shift()!;
@@ -50,8 +50,8 @@ export function runServerCheck(): Promise<string | false> {
   class BrokenComponent extends React.Component {
     render() {
       React.useSyncExternalStore(
-          () => () => {}, 
-          () => null, 
+          () => () => {},
+          () => null,
           () => null
       );
       return null;
@@ -97,8 +97,11 @@ export async function runClientCheck() {
   try {
     const BrokenComponent = () => {
       const func = async () => {
-        const ref = await import('react')
-        ref?.useSyncExternalStore()
+        React.useSyncExternalStore(
+          () => () => {},
+          () => null,
+          () => null
+        );
       }
       func().catch((err) => {
         store.err = err
@@ -107,7 +110,8 @@ export async function runClientCheck() {
       return null;
     };
 
-    const { createRoot } = await import('react-dom/client');
+    const domClient = typeof require !== 'undefined' ? require('react-dom/client') : await import('react-dom/client');
+    const { createRoot } = domClient;
 
     const tempDiv = document.createElement('div');
     tempDiv.id = 'react-error-test-rig';
@@ -147,7 +151,7 @@ export async function runClientCheck() {
 
         if (isTargetError && !KNOWN_SPAM_HASH) {
           const cleanMessage = cleanErrorMessage(errorString);
-          KNOWN_SPAM_HASH = hashUtils.simpleHash(cleanMessage.substring(0, 200)); 
+          KNOWN_SPAM_HASH = hashUtils.simpleHash(cleanMessage.substring(0, 200));
           processPendingErrors();
 
           console.error = originalConsoleError;
