@@ -6,9 +6,8 @@ function get(target: any, prop: string | symbol) {
 
   const muppet = target[SYMBOLS.muppet];
   const currentKey = muppet.get(SPECIAL_KEY);
-  const methods = target[SYMBOLS.methods]; // Кэшируем доступ
+  const methods = target[SYMBOLS.methods];
 
-  // Логика подписки
   if (currentKey !== undefined && prop !== currentKey) {
     if (!methods[prop]) {
       muppet.set(currentKey, false);
@@ -54,11 +53,11 @@ const set = (target: any, prop: string | symbol, value: any, receiver: any): boo
     }
 
     const onUpdate = target[SYMBOLS.onUpdate];
-    const onUpdateLength = onUpdate.length;
-    if (onUpdateLength > 0) {
-      // Классический цикл for работает быстрее в V8 для массивов коллбэков
-      for (let i = 0; i < onUpdateLength; i++) {
-        const fn = onUpdate[i];
+    if (onUpdate.length > 0) {
+      const listeners = [...onUpdate]; 
+      
+      for (let i = 0; i < listeners.length; i++) {
+        const fn = listeners[i];
         if (fn) fn(prop, value, receiver);
       }
     }
@@ -74,7 +73,6 @@ function getAllMethodNames(toCheck: {[key: string]: unknown}) {
     props.push(...Object.getOwnPropertyNames(obj));
   } while (obj = Object.getPrototypeOf(obj));
 
-  // Оптимизированная дедупликация через Set вместо filter(e, i, arr)
   const uniqueProps = Array.from(new Set(props)).sort();
   return uniqueProps.filter(e => typeof toCheck[e] === 'function');
 }
@@ -104,7 +102,6 @@ export const createSource = <
         }
     }
 
-    // Собираем данные без reduce и spread
     const dataKeys = Object.keys(data);
     for (let i = 0; i < dataKeys.length; i++) {
       const key = dataKeys[i];
