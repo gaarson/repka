@@ -67,7 +67,7 @@ describe('createSource', () => {
 
   test('update properties and trigger onUpdate listeners correctly', () => {
     const onUpdateMock = jest.fn();
-    (stateRepo as any)[SYMBOLS.onUpdate].push(onUpdateMock);
+    (stateRepo as any)[SYMBOLS.onUpdate].add(onUpdateMock);
 
     stateRepo.bool = false;
 

@@ -53,14 +53,14 @@ const set = (target: any, prop: string | symbol, value: any, receiver: any): boo
     }
 
     const onUpdate = target[SYMBOLS.onUpdate];
-    if (onUpdate.length > 0) {
-      const listeners = [...onUpdate]; 
-      
+    if (onUpdate.size > 0) {
+      const listeners = Array.from(onUpdate);
+
       for (let i = 0; i < listeners.length; i++) {
-        const fn = listeners[i];
+        const fn = listeners[i] as Function;
         if (fn) fn(prop, value, receiver);
       }
-    }
+    } 
   }
 
   return true;
@@ -124,7 +124,7 @@ export const createSource = <
     });
 
     proxy[SYMBOLS.methods] = methods;
-    proxy[SYMBOLS.onUpdate] = [];
+    proxy[SYMBOLS.onUpdate] = new Set();
     proxy[SYMBOLS.data] = data;
     proxy[SYMBOLS.criticalFields] = new Map();
     proxy[SYMBOLS.muppet] = new Map();

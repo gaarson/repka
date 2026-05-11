@@ -1,11 +1,12 @@
 import { Reaction } from '../reaction';
-import { FIELDS_PREFIX, SYMBOLS } from 'core/domain';
+import { SYMBOLS } from 'core/domain';
+
 
 const createMockStore = () => ({
-  [SYMBOLS.onUpdate]: [],
-  simulateUpdate(prop: string) {
-    this[SYMBOLS.onUpdate].forEach(fn => fn(prop, 'mock_value', this));
-  }
+  [SYMBOLS.onUpdate]: new Set<Function>(),
+  simulateUpdate(prop: string) {
+    this[SYMBOLS.onUpdate].forEach(fn => fn(prop, 'mock_value', this));
+  }
 });
 
 describe('Reaction class', () => {
@@ -43,11 +44,11 @@ describe('Reaction class', () => {
 
   test('should stop running scheduler after dispose()', () => {
     reaction.reportDependency(mockStore, 'foo');
-    expect(mockStore[SYMBOLS.onUpdate].length).toBe(1);
+    expect(mockStore[SYMBOLS.onUpdate].size).toBe(1);
 
     reaction.dispose();
-    
-    expect(mockStore[SYMBOLS.onUpdate].length).toBe(0);
+
+    expect(mockStore[SYMBOLS.onUpdate].size).toBe(0);
 
     mockStore.simulateUpdate('foo');
     expect(scheduler).not.toHaveBeenCalled();
@@ -56,7 +57,7 @@ describe('Reaction class', () => {
   test('should not report dependency if already disposed', () => {
     reaction.dispose();
     reaction.reportDependency(mockStore, 'foo');
-    expect(mockStore[SYMBOLS.onUpdate].length).toBe(0);
+    expect(mockStore[SYMBOLS.onUpdate].size).toBe(0);
   });
 });
 

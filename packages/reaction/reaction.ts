@@ -2,7 +2,7 @@ import { SYMBOLS } from "core/domain";
 import { REACTION_STACK } from "reaction";
 
 type Store = {
-  [SYMBOLS.onUpdate]: ((prop: string, value: unknown, obj: any) => void)[];
+  [SYMBOLS.onUpdate]: Set<(prop: string, value: unknown, obj: any) => void>;
 };
 
 export class Reaction {
@@ -45,19 +45,16 @@ export class Reaction {
   }
 
   private subscribeToStore(store: Store) {
-    const onUpdateArr = store[SYMBOLS.onUpdate];
-    if (onUpdateArr && onUpdateArr.indexOf(this.onUpdate) === -1) {
-      onUpdateArr.push(this.onUpdate);
+    const onUpdateSet = store[SYMBOLS.onUpdate];
+    if (onUpdateSet) {
+      onUpdateSet.add(this.onUpdate);
     }
   }
 
   private unsubscribeFromStore(store: Store) {
-    const onUpdateArr = store[SYMBOLS.onUpdate];
-    if (onUpdateArr) {
-      const index = onUpdateArr.indexOf(this.onUpdate);
-      if (index > -1) {
-        onUpdateArr.splice(index, 1);
-      }
+    const onUpdateSet = store[SYMBOLS.onUpdate];
+    if (onUpdateSet) {
+      onUpdateSet.delete(this.onUpdate);
     }
   }
 

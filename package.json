@@ -1,6 +1,6 @@
 {
   "name": "repka",
-  "version": "0.1.38",
+  "version": "0.1.39",
   "description": "A simple and powerful state manager for React with selective re-renders",
   "author": "ruser",
   "license": "MIT",
@@ -59,10 +59,6 @@
     "watch": "our-scripts start -p packages -em -dts",
     "test:ssr": "vitest run --config ./vitest.node.config.ts"
   },
-  "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
-  },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.0.1",
@@ -72,8 +68,6 @@
     "@vitest/browser-playwright": "^4.0.8",
     "our-scripts": "github:gaarson/mycra#tests-update-rework",
     "playwright-chromium": "^1.56.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "react-test-renderer": "^18.3.1",
     "vitest": "^4.0.8"
   }

@@ -75,12 +75,12 @@ describe('repka HOC (state(Component))', () => {
     const MyComponent = state(() => <div>{state.foo}</div>);
 
     const { unmount } = render(<MyComponent />);
-    
-    expect(state[SYMBOLS.onUpdate].length).toBe(1);
+
+    expect(state[SYMBOLS.onUpdate].size).toBe(1); // Изменено
 
     unmount();
-    
-    expect(state[SYMBOLS.onUpdate].length).toBe(0);
+
+    expect(state[SYMBOLS.onUpdate].size).toBe(0); // Изменено
   });
 });
 
